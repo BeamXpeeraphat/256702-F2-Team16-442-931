@@ -2,104 +2,136 @@ package com.project;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-public class HomePage extends JFrame {
-    private ImageIcon backgroundImage;
+public class HomePage extends JPanel {
+    private MainGameWindow mainGameWindow;
 
-    public HomePage() {
-        // ตั้งค่าหน้าต่างของ HomePage
-        setTitle("Home Page - My Game");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // เต็มหน้าจอ
-        setResizable(false); // ปิดการปรับขนาด ทำให้ปุ่ม Maximize ปิดการใช้งาน
-
-        // โหลดและตั้งค่าพื้นหลัง
-        backgroundImage = new ImageIcon(getClass().getResource("/com/project/backgroundofhomepage.jpg"));
-        if (backgroundImage.getImageLoadStatus() != MediaTracker.COMPLETE) {
-            System.out.println("Error: Cannot load /com/project/backgroundofhomepage.jpg");
-            System.out.println("Check if the file exists in src/com/project/ and the name is correct (case-sensitive).");
-            setBackground(Color.GRAY); // สีสำรองถ้าโหลดภาพไม่ได้
-        }
-
-        // ใช้ BorderLayout เป็นเลย์เอาต์หลัก
+    public HomePage(MainGameWindow mainGameWindow) {
+        this.mainGameWindow = mainGameWindow;
         setLayout(new BorderLayout());
 
-        // เพิ่ม JLabel สำหรับพื้นหลัง
-        JLabel backgroundLabel = new JLabel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (backgroundImage != null) {
-                    // ปรับขนาดภาพพื้นหลังให้เข้ากับหน้าต่าง (เต็มหน้าจอ)
-                    Image scaledImage = backgroundImage.getImage().getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
-                    g.drawImage(scaledImage, 0, 0, this);
-                }
-            }
-        };
-        backgroundLabel.setLayout(new BorderLayout()); // ใช้ BorderLayout ใน JLabel
+        ImageIcon backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofhomepage.jpg"));
+        JLabel backgroundLabel = new JLabel(backgroundImage);
+        backgroundLabel.setLayout(new BorderLayout());
         add(backgroundLabel, BorderLayout.CENTER);
 
-        // สร้าง JPanel สำหรับเมนู
-        JPanel menuPanel = new JPanel(new GridBagLayout()); // ใช้ GridBagLayout
-        menuPanel.setOpaque(false); // ทำให้พื้นหลังโปร่งใส
-
-        // ตั้งค่า GridBagConstraints
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20, 0, 20, 0); // ระยะห่างแนวตั้ง 20px
-        gbc.anchor = GridBagConstraints.CENTER; // จัดกึ่งกลาง
-
-        // เพิ่มปุ่มเมนู
-        JButton startButton = new JButton("Start");
+        // สร้างปุ่ม
+        JButton playButton = new JButton("Play");
         JButton howToPlayButton = new JButton("How to Play");
         JButton infoButton = new JButton("Info");
         JButton exitButton = new JButton("Exit");
 
-        // ปรับแต่งปุ่มให้เหมือนภาพ
+        // บันทึกสีเริ่มต้นของปุ่มแต่ละปุ่ม
+        Color defaultPlayColor = new Color(135, 206, 235);
+        Color defaultHowToPlayColor = new Color(205, 133, 63);
+        Color defaultInfoColor = new Color(255, 215, 0);
+        Color defaultExitColor = new Color(255, 69, 0);
+
+        // ตั้งค่าฟอนต์ตัวอักษรและสีของปุ่มเริ่มต้น
         Font buttonFont = new Font("Arial", Font.BOLD, 20);
-        startButton.setFont(buttonFont);
-        howToPlayButton.setFont(buttonFont);
-        infoButton.setFont(buttonFont);
-        exitButton.setFont(buttonFont);
-        startButton.setBackground(new Color(135, 206, 235)); // สีน้ำเงินอ่อน
-        startButton.setForeground(Color.BLACK);
-        howToPlayButton.setBackground(new Color(205, 133, 63)); // สีน้ำตาล
-        howToPlayButton.setForeground(Color.BLACK);
-        infoButton.setBackground(new Color(255, 215, 0)); // สีเหลือง
-        infoButton.setForeground(Color.BLACK);
-        exitButton.setBackground(new Color(255, 69, 0)); // สีส้มแดง
-        exitButton.setForeground(Color.WHITE);
-
-        // ปรับขนาดปุ่ม
         Dimension buttonSize = new Dimension(200, 50);
-        startButton.setPreferredSize(buttonSize);
-        howToPlayButton.setPreferredSize(buttonSize);
-        infoButton.setPreferredSize(buttonSize);
-        exitButton.setPreferredSize(buttonSize);
+        setupButton(playButton, defaultPlayColor, Color.BLACK, buttonFont, buttonSize);
+        setupButton(howToPlayButton, defaultHowToPlayColor, Color.BLACK, buttonFont, buttonSize);
+        setupButton(infoButton, defaultInfoColor, Color.BLACK, buttonFont, buttonSize);
+        setupButton(exitButton, defaultExitColor, Color.WHITE, buttonFont, buttonSize);
 
-        // เพิ่มปุ่มลงใน menuPanel
+        // Panel สำหรับปุ่มตรงกลาง
+        JPanel menuPanel = new JPanel(new GridBagLayout());
+        menuPanel.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(20, 0, 20, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
+
         gbc.gridx = 0;
         gbc.gridy = 0;
-        menuPanel.add(startButton, gbc);
+        menuPanel.add(playButton, gbc);
         gbc.gridy = 1;
         menuPanel.add(howToPlayButton, gbc);
-        gbc.gridy = 2;
-        menuPanel.add(infoButton, gbc);
-        gbc.gridy = 3;
-        menuPanel.add(exitButton, gbc);
 
-        // วาง menuPanel ตรงกลางหน้าต่าง
         backgroundLabel.add(menuPanel, BorderLayout.CENTER);
 
-        // เพิ่ม ActionListener ให้ปุ่ม (ตัวอย่าง)
-        startButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Starting the game!"));
-        howToPlayButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "How to Play instructions here!"));
-        infoButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Game Info here!"));
-        exitButton.addActionListener(e -> System.exit(0)); // ออกโปรแกรม
+        // Panel สำหรับปุ่ม Info และ Exit (ล่างซ้าย)
+        JPanel bottomPanel = new JPanel(new GridLayout(2, 1, 0, 10));
+        bottomPanel.setOpaque(false);
+        bottomPanel.add(infoButton);
+        bottomPanel.add(exitButton);
+
+        JPanel bottomContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+        bottomContainer.setOpaque(false);
+        bottomContainer.add(bottomPanel);
+
+        backgroundLabel.add(bottomContainer, BorderLayout.SOUTH);
+
+        // เพิ่มเอฟเฟกต์เปลี่ยนสีและเคอร์เซอร์เมื่อโฮเวอร์/คลิก
+        addHoverEffect(playButton, defaultPlayColor);
+        addHoverEffect(howToPlayButton, defaultHowToPlayColor);
+        addHoverEffect(infoButton, defaultInfoColor);
+        addHoverEffect(exitButton, defaultExitColor);
+
+        // กำหนด ActionListener
+        playButton.addActionListener(e -> mainGameWindow.showPanel("LevelGame"));
+        howToPlayButton.addActionListener(e -> JOptionPane.showMessageDialog(this,
+            "<html><center><b><font size='6'>How to play</font></b></center><br>" +
+            "<font size='4'>" +
+            "- Press A to move left<br>" +
+            "- Press D to move right<br>" +
+            "- Press W or Spacebar to jump<br>" +
+            "- Press H to honk the horn<br>" +
+            "- Press P or ESC to pause the game and open various menus<br>" +
+            "- Press M to enter the shop screen or change vehicles" +
+            "</font></html>"));
+        infoButton.addActionListener(e -> JOptionPane.showMessageDialog(this,
+            "<html><b><font size='4'>This game is created and developed by <br>" +
+            "the collaboration between the project team <br>" +
+            "codename: Mr.442 , Mr.931 </font></b><br></html>"));
+        exitButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to exit?",
+                "Exit Confirmation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            if (result == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            }
+        });
     }
 
-    // เมธอดเพื่อแสดงหน้าต่าง (ถ้าต้องการเรียกจากภายนอก)
-    public void showWindow() {
-        setVisible(true);
+    // เมธอดสำหรับตั้งค่าปุ่ม
+    private void setupButton(JButton button, Color bgColor, Color fgColor, Font font, Dimension size) {
+        button.setFont(font);
+        button.setBackground(bgColor);
+        button.setForeground(fgColor);
+        button.setPreferredSize(size);
+    }
+
+    // เพิ่ม MouseListener เพื่อให้ปุ่มเปลี่ยนสีและเคอร์เซอร์
+    private void addHoverEffect(JButton button, Color defaultColor) {
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(Color.GREEN);
+                mainGameWindow.setCursor(CursorManager.getClickCursor()); // เปลี่ยนเป็นเคอร์เซอร์คลิกเมื่อโฮเวอร์
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(defaultColor);
+                mainGameWindow.setCursor(CursorManager.getNormalCursor()); // กลับไปเคอร์เซอร์ปกติ
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                mainGameWindow.setCursor(CursorManager.getClickCursor()); // เปลี่ยนเป็นเคอร์เซอร์คลิกเมื่อกด
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                mainGameWindow.setCursor(CursorManager.getNormalCursor()); // กลับไปเคอร์เซอร์ปกติเมื่อปล่อย
+            }
+        });
     }
 }
