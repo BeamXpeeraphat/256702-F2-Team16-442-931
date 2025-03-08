@@ -69,7 +69,7 @@ public class LevelGame extends JPanel {
         // กำหนด ActionListener
         level1Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Starting Level 1!"));
         level2Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Starting Level 2!"));
-        level3Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Starting Level 3!"));
+        level3Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Coming Soon!"));
         backButton.addActionListener(e -> mainGameWindow.showPanel("HomePage"));
     }
 
