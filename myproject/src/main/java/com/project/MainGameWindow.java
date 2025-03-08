@@ -7,7 +7,7 @@ import java.awt.event.*;
 public class MainGameWindow extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
-    private JLabel backgroundLabel; // ตัวแปรสำหรับจัดการพื้นหลัง
+    private ShopGame shopGame;
 
     public MainGameWindow() {
         setTitle("Adventure Rider Game");
@@ -15,38 +15,21 @@ public class MainGameWindow extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setResizable(false);
 
-        // ตั้งค่าเคอร์เซอร์ปกติเมื่อเริ่มต้น
         setCursor(CursorManager.getNormalCursor());
 
-        // ตั้งค่า CardLayout
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // สร้าง JLabel สำหรับพื้นหลัง
-        backgroundLabel = new JLabel();
-        ImageIcon homeBackground = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofhomepage.jpg"));
-        if (homeBackground.getImage() == null) {
-            System.err.println("Error: backgroundofhomepage.jpg not found!");
-            backgroundLabel.setText("Background image not found!");
-        } else {
-            backgroundLabel.setIcon(homeBackground);
-        }
-        backgroundLabel.setLayout(new BorderLayout());
-        backgroundLabel.setBounds(0, 0, getWidth(), getHeight()); // ตั้งค่าขนาดให้เต็มหน้าจอ
-
-        // เพิ่มหน้า HomePage, LevelGame และ ShopGame
         HomePage homePage = new HomePage(this);
         LevelGame levelGame = new LevelGame(this);
-        ShopGame shopGame = new ShopGame(this);
+        shopGame = new ShopGame(this);
 
-        backgroundLabel.add(mainPanel, BorderLayout.CENTER);
         mainPanel.add(homePage, "HomePage");
         mainPanel.add(levelGame, "LevelGame");
         mainPanel.add(shopGame, "ShopGame");
 
-        add(backgroundLabel); // เพิ่ม backgroundLabel ลงใน JFrame
+        add(mainPanel);
 
-        // เริ่มที่ HomePage
         cardLayout.show(mainPanel, "HomePage");
 
         addMouseListener(new MouseAdapter() {
@@ -71,34 +54,26 @@ public class MainGameWindow extends JFrame {
             }
         });
 
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (shopGame != null && shopGame.getInventory() != null) {
+                    shopGame.getInventory().saveToFile();
+                    System.out.println("Saved inventory on exit.");
+                }
+                System.exit(0);
+            }
+        });
+
         setVisible(true);
     }
 
     public void showPanel(String panelName) {
-        if (panelName.equals("ShopGame")) {
-            ImageIcon shopBackground = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofshop.jpg"));
-            if (shopBackground.getImage() == null) {
-                System.err.println("Error: backgroundofshop.jpg not found or failed to load! Check resources/com/project/ folder.");
-                backgroundLabel.setText("Background image not found!");
-            } else {
-                System.out.println("Successfully loaded backgroundofshop.jpg");
-                backgroundLabel.setIcon(shopBackground);
-            }
-        } else if (panelName.equals("HomePage")) {
-            ImageIcon homeBackground = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofhomepage.jpg"));
-            if (homeBackground.getImage() == null) {
-                System.err.println("Error: backgroundofhomepage.jpg not found!");
-                backgroundLabel.setText("Background image not found!");
-            } else {
-                backgroundLabel.setIcon(homeBackground);
-            }
-        }
         cardLayout.show(mainPanel, panelName);
-        backgroundLabel.setBounds(0, 0, getWidth(), getHeight()); // อัปเดตขนาดทุกครั้งที่เปลี่ยนหน้า
     }
 
-    // เมธอดสำหรับตั้งค่าพื้นหลัง (ถ้าต้องการให้ยืดหยุ่นมากขึ้น)
-    public void setBackgroundLabel(JLabel label) {
-        this.backgroundLabel = label;
+    // เพิ่ม getter สำหรับ shopGame
+    public ShopGame getShopGame() {
+        return shopGame;
     }
 }

@@ -12,7 +12,7 @@ public class LevelGame extends JPanel {
         this.mainGameWindow = mainGameWindow;
         setLayout(new BorderLayout());
 
-        ImageIcon backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofhomepage.jpg"));
+        ImageIcon backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofgame.jpg"));
         JLabel backgroundLabel = new JLabel(backgroundImage);
         backgroundLabel.setLayout(new BorderLayout());
         add(backgroundLabel, BorderLayout.CENTER);

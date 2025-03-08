@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class HomePage extends JPanel {
     private MainGameWindow mainGameWindow;
@@ -68,9 +70,32 @@ public class HomePage extends JPanel {
         bottomPanel.add(infoButton);
         bottomPanel.add(exitButton);
 
-        JPanel bottomContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+        // ปุ่ม Re:Game (ล่างขวา)
+        JButton resetButton = new JButton("Re:Game");
+        resetButton.setFont(new Font("Arial", Font.BOLD, 14));
+        resetButton.setBackground(Color.RED);
+        resetButton.setForeground(Color.WHITE);
+        resetButton.setPreferredSize(new Dimension(150, 50)); // ลด height เป็น 25 (ปรับได้ตามต้องการ)
+        resetButton.setMaximumSize(new Dimension(150, 50));   // จำกัดความสูงสูงสุด
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetGame();
+            }
+        });
+
+        // ใส่ resetButton ใน JPanel แยกเพื่อควบคุมขนาด
+        JPanel resetPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 50, 10)); // เดิม (20, 0)
+        resetPanel.setOpaque(false);
+        resetPanel.add(resetButton);
+
+        // รวม bottomPanel และ resetPanel ใน container เดียว
+        JPanel bottomContainer = new JPanel(new BorderLayout());
         bottomContainer.setOpaque(false);
-        bottomContainer.add(bottomPanel);
+        bottomContainer.add(bottomPanel, BorderLayout.WEST); // วาง Shop, Info, Exit ทางซ้าย
+        bottomContainer.add(resetPanel, BorderLayout.EAST);  // วาง Re:Game ทางขวา
+        bottomContainer.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // ระยะห่างจากขอบ
+
         backgroundLabel.add(bottomContainer, BorderLayout.SOUTH);
 
         // เพิ่มเอฟเฟกต์เปลี่ยนสีและเคอร์เซอร์เมื่อโฮเวอร์/คลิก
@@ -79,6 +104,7 @@ public class HomePage extends JPanel {
         addHoverEffect(shopButton, defaultShopColor);
         addHoverEffect(infoButton, defaultInfoColor);
         addHoverEffect(exitButton, defaultExitColor);
+        addHoverEffect(resetButton, Color.RED);
 
         // กำหนด ActionListener
         playButton.addActionListener(e -> mainGameWindow.showPanel("LevelGame"));
@@ -149,5 +175,24 @@ public class HomePage extends JPanel {
                 mainGameWindow.setCursor(CursorManager.getNormalCursor());
             }
         });
+    }
+
+    private void resetGame() {
+        int result = JOptionPane.showConfirmDialog(
+            this,
+            "<html><center><b><span style=\"font-size: 20px;\">Are you sure you want to reset the game?<br>All progress will be lost.</span></b></center></html>",
+            "Reset Confirmation",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+        if (result == JOptionPane.YES_OPTION) {
+            ShopGame shopGame = mainGameWindow.getShopGame();
+            if (shopGame != null && shopGame.getInventory() != null) {
+                Inventory inventory = shopGame.getInventory();
+                inventory.resetToDefault();
+                inventory.saveToFile();
+                JOptionPane.showMessageDialog(this, "Game has been reset to default!");
+            }
+        }
     }
 }

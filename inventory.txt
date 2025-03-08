@@ -1,0 +1,3 @@
+Coins: 1000
+Motorcycles:
+motorcycle1.png

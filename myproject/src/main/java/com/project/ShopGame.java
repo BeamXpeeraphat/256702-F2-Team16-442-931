@@ -4,96 +4,106 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.net.URL;
+import javax.imageio.ImageIO;
 
 public class ShopGame extends JPanel {
     private MainGameWindow mainGameWindow;
-    private JPanel rightPanel; // แผงสำหรับแสดงเนื้อหาด้านขวา
-    private CardLayout cardLayout;
-    private JButton[] leftButtons; // เก็บปุ่มด้านซ้ายเพื่อจัดการสี
-    private JButton currentSelectedButton; // เก็บปุ่มที่ถูกเลือกปัจจุบัน
+    private JButton[] leftButtons;
+    private JButton currentSelectedButton;
+    private JLayeredPane layeredPane;
+    private JLabel backgroundLabel;
+    private Inventory inventory;
+    private JPanel leftPanel; // เพิ่มตัวแปรเพื่อเก็บ leftPanel
 
     public ShopGame(MainGameWindow mainGameWindow) {
         this.mainGameWindow = mainGameWindow;
         setLayout(new BorderLayout());
-        
 
-        // ลบบรรทัดนี้: setBackground(Color.WHITE);
+        layeredPane = new JLayeredPane();
+        layeredPane.setPreferredSize(new Dimension(800, 600));
 
-        // แผงด้านซ้ายสำหรับปุ่ม
-        JPanel leftPanel = new JPanel(new GridLayout(4, 1, 5, 5));
-        leftPanel.setPreferredSize(new Dimension(150, 0));
-        leftPanel.setBackground(Color.WHITE);
-        leftPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10));
+        backgroundLabel = new JLabel() {
+            private BufferedImage backgroundImage;
 
-        // สร้างปุ่มด้านซ้าย
-        String[] buttonLabels = {"motorcycle", "purchase", "contact", "return"};
-        Color defaultColor = Color.LIGHT_GRAY;
-        Color clickedColor = Color.GRAY;
+            {
+                try {
+                    URL imgURL = getClass().getResource("/com/project/backgroundofshop.jpg");
+                    if (imgURL != null) {
+                        backgroundImage = ImageIO.read(imgURL);
+                        System.out.println("Image loaded successfully: " + imgURL);
+                    } else {
+                        System.err.println("Error: backgroundofshop.jpg not found at /com/project/");
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error loading image: " + e.getMessage());
+                    backgroundImage = null;
+                }
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), null);
+                } else {
+                    g.drawString("Failed to load background image!", 10, 20);
+                }
+            }
+        };
+        backgroundLabel.setBounds(0, 0, 800, 600);
+        layeredPane.add(backgroundLabel, JLayeredPane.DEFAULT_LAYER);
+
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                backgroundLabel.setBounds(0, 0, getWidth(), getHeight());
+                layeredPane.setPreferredSize(new Dimension(getWidth(), getHeight()));
+                repaint();
+            }
+        });
+
+        // สร้าง leftPanel ครั้งเดียวใน constructor
+        leftPanel = createLeftPanel();
+        layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER);
+
+        add(layeredPane, BorderLayout.CENTER);
+
+        revalidate();
+        repaint();
+    }
+
+    private JPanel createLeftPanel() {
+        JPanel leftPanel = new JPanel(new GridLayout(5, 1, 5, 45));
+        leftPanel.setBounds(50, 150, 175, 450);
+        leftPanel.setOpaque(false);
+
+        String[] buttonLabels = {"Motorcycle", "Purchase", "Contact", "Inventory", "Return"};
         leftButtons = new JButton[buttonLabels.length];
 
         for (int i = 0; i < buttonLabels.length; i++) {
             JButton button = new JButton(buttonLabels[i]);
-            button.setBackground(defaultColor);
+            button.setBackground(Color.LIGHT_GRAY); // สีเริ่มต้นเป็นเทาอ่อน
             button.setFont(new Font("Arial", Font.BOLD, 14));
-            button.setFocusPainted(false);
-            button.setPreferredSize(new Dimension(130, 30));
-
             leftButtons[i] = button;
 
             button.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    resetButtonColors();
-                    button.setBackground(clickedColor);
-                    currentSelectedButton = button;
-                    mainGameWindow.setCursor(CursorManager.getClickCursor());
-                    updateRightPanel(button.getText());
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    mainGameWindow.setCursor(CursorManager.getNormalCursor());
-                }
-            });
-
-            button.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    mainGameWindow.setCursor(CursorManager.getClickCursor());
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    if (button != currentSelectedButton) {
-                        mainGameWindow.setCursor(CursorManager.getNormalCursor());
+                    if (!button.getText().equals("Return")) {
+                        resetButtonColors();
+                        button.setBackground(Color.GRAY);
+                        currentSelectedButton = button;
                     }
+                    mainGameWindow.setCursor(CursorManager.getClickCursor());
+                    updatePanel(button.getText());
                 }
             });
-
             leftPanel.add(button);
         }
-
-        leftButtons[0].setBackground(clickedColor);
-        currentSelectedButton = leftButtons[0];
-
-        // แผงด้านขวา (กรอบใหญ่)
-        rightPanel = new JPanel(new CardLayout());
-        cardLayout = (CardLayout) rightPanel.getLayout();
-        rightPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 5));
-        rightPanel.setBackground(Color.WHITE); // ยังคงไว้ที่แผงขวาเพื่อความสวยงาม
-        rightPanel.setPreferredSize(new Dimension(400, 200));
-        rightPanel.setMaximumSize(new Dimension(400, 200)); // จำกัดขนาดสูงสุด
-        rightPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.WHITE, 5),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-
-        rightPanel.add(createMotorcyclePanel(), "motorcycle");
-        rightPanel.add(createPurchasePanel(), "purchase");
-        rightPanel.add(createContactPanel(), "contact");
-
-        add(leftPanel, BorderLayout.WEST);
-        add(rightPanel, BorderLayout.CENTER);
-        cardLayout.show(rightPanel, "motorcycle");
+        return leftPanel;
     }
 
     private void resetButtonColors() {
@@ -102,73 +112,50 @@ public class ShopGame extends JPanel {
         }
     }
 
-    private JPanel createMotorcyclePanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
-        panel.setBackground(Color.WHITE);
+    private void updatePanel(String buttonLabel) {
+        // ลบเฉพาะเลเยอร์เนื้อหา ไม่สร้าง leftPanel ใหม่
+        layeredPane.removeAll();
+        layeredPane.add(backgroundLabel, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER); // ใช้ leftPanel เดิม
 
-        String[] subLabels = {"y1", "y2", "y3", "y4"};
-        for (String label : subLabels) {
-            JButton subButton = new JButton(label);
-            subButton.setBackground(Color.RED);
-            subButton.setFont(new Font("Arial", Font.BOLD, 12));
-            subButton.setPreferredSize(new Dimension(80, 40));
-            panel.add(subButton);
-        }
-
-        JLabel detailLabel = new JLabel("<html><center>Details for Motorcycle<br>Select an item to purchase!</center></html>");
-        detailLabel.setFont(new Font("Arial", Font.PLAIN, 10));
-        detailLabel.setHorizontalAlignment(JLabel.CENTER);
-
-        JPanel fullPanel = new JPanel(new BorderLayout());
-        fullPanel.add(panel, BorderLayout.CENTER);
-        fullPanel.add(detailLabel, BorderLayout.SOUTH);
-        return fullPanel;
-    }
-
-    private JPanel createPurchasePanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
-        panel.setBackground(Color.WHITE);
-
-        String[] subLabels = {"y1", "y2", "y3", "y4"};
-        for (String label : subLabels) {
-            JButton subButton = new JButton(label);
-            subButton.setBackground(Color.RED);
-            subButton.setFont(new Font("Arial", Font.BOLD, 12));
-            subButton.setPreferredSize(new Dimension(80, 40));
-            panel.add(subButton);
-        }
-
-        JLabel detailLabel = new JLabel("<html><center>Purchase Options<br>Top up your balance here!</center></html>");
-        detailLabel.setFont(new Font("Arial", Font.PLAIN, 10));
-        detailLabel.setHorizontalAlignment(JLabel.CENTER);
-
-        JPanel fullPanel = new JPanel(new BorderLayout());
-        fullPanel.add(panel, BorderLayout.CENTER);
-        fullPanel.add(detailLabel, BorderLayout.SOUTH);
-        return fullPanel;
-    }
-
-    private JPanel createContactPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
-
-        ImageIcon contactImage = new ImageIcon(getClass().getClassLoader().getResource("com/project/contactme.png"));
-        if (contactImage.getImage() != null) {
-            JLabel imageLabel = new JLabel(contactImage);
-            panel.add(imageLabel, BorderLayout.CENTER);
-        } else {
-            JLabel errorLabel = new JLabel("Image not found: contactme.png");
-            panel.add(errorLabel, BorderLayout.CENTER);
-        }
-
-        return panel;
-    }
-
-    private void updateRightPanel(String buttonLabel) {
-        if (buttonLabel.equals("return")) {
+        if (buttonLabel.equals("Return")) {
+            if (inventory != null) {
+                inventory.saveToFile();
+            }
             mainGameWindow.showPanel("HomePage");
         } else {
-            cardLayout.show(rightPanel, buttonLabel);
+            JPanel contentPanel = null;
+            switch (buttonLabel) {
+                case "Motorcycle":
+                    contentPanel = new MotorcyclePanel(mainGameWindow);
+                    inventory = ((MotorcyclePanel) contentPanel).getInventory();
+                    break;
+                case "Purchase":
+                    contentPanel = new PurchasePanel(mainGameWindow);
+                    break;
+                case "Contact":
+                    contentPanel = new ContactPanel(mainGameWindow);
+                    break;
+                case "Inventory":
+                    if (inventory == null) {
+                        contentPanel = new MotorcyclePanel(mainGameWindow);
+                        inventory = ((MotorcyclePanel) contentPanel).getInventory();
+                        contentPanel = inventory;
+                    } else {
+                        contentPanel = inventory;
+                    }
+                    break;
+            }
+            if (contentPanel != null) {
+                contentPanel.setBounds(0, 0, layeredPane.getWidth(), layeredPane.getHeight());
+                layeredPane.add(contentPanel, JLayeredPane.MODAL_LAYER);
+            }
+            layeredPane.revalidate();
+            layeredPane.repaint();
         }
+    }
+
+    public Inventory getInventory() {
+        return inventory;
     }
 }
