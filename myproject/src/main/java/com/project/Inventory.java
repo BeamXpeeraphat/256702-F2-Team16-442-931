@@ -11,24 +11,29 @@ public class Inventory extends JPanel {
     private ImageIcon coinIcon;
     private JPanel rightPanel;
     private static final String SAVE_FILE = "inventory.txt";
+    private static final int MOTORCYCLE_WIDTH = 150;
+    private static final int START_X = 20;
+    private static final int START_Y = 150;
+    private static final int X_GAP = 250;
+    private static final int Y_GAP = 10;
 
     public Inventory(MainGameWindow mainGameWindow) {
         setLayout(null);
         setOpaque(false);
 
-        coins = 1000; // ค่าเริ่มต้น
+        coins = 1000;
         ownedMotorcycles = new ArrayList<>();
-        ownedMotorcycles.add("motorcycle1.png"); // รถเริ่มต้น
+        ownedMotorcycles.add("motorcycle1.png");
 
         rightPanel = new JPanel();
-        rightPanel.setBounds(275, 60, 500, 500);
+        rightPanel.setBounds(275, 60, 700, 600); // ปรับขนาดเริ่มต้นให้ใหญ่ขึ้น
         rightPanel.setOpaque(true);
         rightPanel.setBackground(new Color(255, 255, 255, 150));
         rightPanel.setLayout(null);
 
-        loadFromFile(); // โหลดข้อมูลจากไฟล์
+        loadFromFile();
 
-        coinIcon = loadImage("coin.png", 30, 30);
+        coinIcon = loadCoinImage("coin.png");
 
         JLabel titleLabel = new JLabel("<html><b><span style=\"font-size: 24px;\">Inventory Section</span></b><br>"
                 + "Your coins and owned items are here.</html>");
@@ -40,7 +45,9 @@ public class Inventory extends JPanel {
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentResized(java.awt.event.ComponentEvent e) {
-                rightPanel.setBounds(275, 60, getWidth() - 325, getHeight() - 120);
+                int newWidth = Math.max(getWidth() - 325, 700); // ขั้นต่ำ 700
+                int newHeight = Math.max(getHeight() - 120, 600); // ขั้นต่ำ 600
+                rightPanel.setBounds(275, 60, newWidth, newHeight);
                 repaint();
             }
         });
@@ -72,34 +79,58 @@ public class Inventory extends JPanel {
     }
 
     private void updateInventoryDisplay() {
-        // ลบส่วนประกอบเก่า (ยกเว้น title)
         for (Component comp : rightPanel.getComponents()) {
             if (!(comp instanceof JLabel && ((JLabel) comp).getText().contains("Inventory Section"))) {
                 rightPanel.remove(comp);
             }
         }
 
-        // แสดงยอดเงิน
         JLabel coinLabel = new JLabel("Coins: " + coins, coinIcon, JLabel.LEFT);
         coinLabel.setFont(new Font("Arial", Font.BOLD, 16));
         coinLabel.setBounds(10, 70, 200, 30);
         rightPanel.add(coinLabel);
 
-        // หัวข้อรายการมอเตอร์ไซค์
         JLabel itemsLabel = new JLabel("Owned Motorcycles:");
-        itemsLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        itemsLabel.setFont(new Font("Arial", Font.PLAIN, 20));
         itemsLabel.setBounds(10, 110, 200, 30);
         rightPanel.add(itemsLabel);
 
-        // แสดงรายการมอเตอร์ไซค์
-        int y = 150;
+        int index = 0;
+        int y = START_Y;
+        int maxHeightRow1 = 0;
+        int maxHeightRow2 = 0;
+
         for (String motorcycle : ownedMotorcycles) {
-            ImageIcon icon = loadImage(motorcycle, 50, 50);
+            ImageIcon icon = loadImage(motorcycle);
+            if (icon != null) {
+                int height = icon.getIconHeight();
+                if (index < 2) {
+                    maxHeightRow1 = Math.max(maxHeightRow1, height);
+                } else {
+                    maxHeightRow2 = Math.max(maxHeightRow2, height);
+                }
+                index++;
+                if (index >= 4) break;
+            }
+        }
+
+        index = 0;
+        for (String motorcycle : ownedMotorcycles) {
+            ImageIcon icon = loadImage(motorcycle);
             if (icon != null) {
                 JLabel itemLabel = new JLabel(motorcycle, icon, JLabel.LEFT);
-                itemLabel.setBounds(20, y, 200, 50);
+                int row = index / 2;
+                int col = index % 2;
+                int x = START_X + col * X_GAP;
+                int height = icon.getIconHeight();
+                if (row == 0) {
+                    itemLabel.setBounds(x, y, MOTORCYCLE_WIDTH + 200, height);
+                } else {
+                    itemLabel.setBounds(x, y + maxHeightRow1 + Y_GAP, MOTORCYCLE_WIDTH + 200, height);
+                }
                 rightPanel.add(itemLabel);
-                y += 60;
+                index++;
+                if (index >= 4) break;
             }
         }
 
@@ -107,14 +138,33 @@ public class Inventory extends JPanel {
         rightPanel.repaint();
     }
 
-    private ImageIcon loadImage(String imageName, int width, int height) {
+    private ImageIcon loadImage(String imageName) {
         try {
             ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("com/project/" + imageName));
             if (icon.getImage() == null) {
                 System.err.println("Failed to load " + imageName + " - Image is null");
                 return null;
             }
-            Image scaledImage = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            int originalWidth = icon.getIconWidth();
+            int originalHeight = icon.getIconHeight();
+            int newWidth = MOTORCYCLE_WIDTH;
+            int newHeight = (int) ((double) originalHeight * newWidth / originalWidth);
+            Image scaledImage = icon.getImage().getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaledImage);
+        } catch (Exception e) {
+            System.err.println("Error loading " + imageName + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    private ImageIcon loadCoinImage(String imageName) {
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("com/project/" + imageName));
+            if (icon.getImage() == null) {
+                System.err.println("Failed to load " + imageName + " - Image is null");
+                return null;
+            }
+            Image scaledImage = icon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
             return new ImageIcon(scaledImage);
         } catch (Exception e) {
             System.err.println("Error loading " + imageName + ": " + e.getMessage());

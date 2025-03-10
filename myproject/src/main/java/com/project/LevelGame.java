@@ -6,6 +6,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class LevelGame extends JPanel {
+    @SuppressWarnings("unused") // ปิด warning ว่า mainGameWindow ไม่ถูกใช้
     private MainGameWindow mainGameWindow;
 
     public LevelGame(MainGameWindow mainGameWindow) {
@@ -33,11 +34,11 @@ public class LevelGame extends JPanel {
         level2Button.setFont(buttonFont);
         level3Button.setFont(buttonFont);
         backButton.setFont(buttonFont);
-        level1Button.setBackground(new Color(50, 205, 50));
+        level1Button.setBackground(new Color(192, 192, 192));
         level1Button.setForeground(Color.BLACK);
-        level2Button.setBackground(new Color(50, 205, 50));
+        level2Button.setBackground(new Color(169, 169, 169));
         level2Button.setForeground(Color.BLACK);
-        level3Button.setBackground(new Color(50, 205, 50));
+        level3Button.setBackground(new Color(169, 169, 169));
         level3Button.setForeground(Color.BLACK);
         backButton.setBackground(new Color(255, 69, 0));
         backButton.setForeground(Color.WHITE);
@@ -60,40 +61,28 @@ public class LevelGame extends JPanel {
 
         backgroundLabel.add(levelPanel, BorderLayout.CENTER);
 
-        // เพิ่มเอฟเฟกต์เปลี่ยนเคอร์เซอร์
         addHoverEffect(level1Button, new Color(50, 205, 50));
         addHoverEffect(level2Button, new Color(50, 205, 50));
         addHoverEffect(level3Button, new Color(50, 205, 50));
         addHoverEffect(backButton, new Color(255, 69, 0));
 
-        // กำหนด ActionListener
-        level1Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Starting Level 1!"));
-        level2Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Starting Level 2!"));
-        level3Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Coming Soon!"));
+        level1Button.addActionListener(e -> CustomMessageDialog.showMessageDialog(this, "Starting Level 1!", "Level 1", JOptionPane.INFORMATION_MESSAGE));
+        level2Button.addActionListener(e -> CustomMessageDialog.showMessageDialog(this, "Starting Level 2!", "Level 2", JOptionPane.INFORMATION_MESSAGE));
+        level3Button.addActionListener(e -> CustomMessageDialog.showMessageDialog(this, "Coming Soon!", "Level 3", JOptionPane.INFORMATION_MESSAGE));
         backButton.addActionListener(e -> mainGameWindow.showPanel("HomePage"));
     }
 
-    // เพิ่ม MouseListener เพื่อให้ปุ่มเปลี่ยนเคอร์เซอร์
     private void addHoverEffect(JButton button, Color defaultColor) {
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                mainGameWindow.setCursor(CursorManager.getClickCursor()); // เปลี่ยนเป็นเคอร์เซอร์คลิกเมื่อโฮเวอร์
+                button.setBackground(defaultColor);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                mainGameWindow.setCursor(CursorManager.getNormalCursor()); // กลับไปเคอร์เซอร์ปกติ
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                mainGameWindow.setCursor(CursorManager.getClickCursor()); // เปลี่ยนเป็นเคอร์เซอร์คลิกเมื่อกด
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                mainGameWindow.setCursor(CursorManager.getNormalCursor()); // กลับไปเคอร์เซอร์ปกติเมื่อปล่อย
+                button.setBackground(button.getBackground().equals(new Color(255, 69, 0)) ? 
+                                     new Color(255, 69, 0) : new Color(192, 192, 192));
             }
         });
     }

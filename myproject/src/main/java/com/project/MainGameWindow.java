@@ -2,7 +2,10 @@ package com.project;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class MainGameWindow extends JFrame {
     private CardLayout cardLayout;
@@ -32,6 +35,7 @@ public class MainGameWindow extends JFrame {
 
         cardLayout.show(mainPanel, "HomePage");
 
+        // MouseListener สำหรับเข้า/ออกหน้าต่าง
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -42,18 +46,24 @@ public class MainGameWindow extends JFrame {
             public void mouseExited(MouseEvent e) {
                 setCursor(Cursor.getDefaultCursor());
             }
+        });
 
+        // MouseMotionListener สำหรับปุ่มและ JLabel
+        addMouseMotionListener(new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent e) {
-                setCursor(CursorManager.getClickCursor());
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                setCursor(CursorManager.getNormalCursor());
+            public void mouseMoved(MouseEvent e) {
+                Component component = SwingUtilities.getDeepestComponentAt(mainPanel, e.getX(), e.getY());
+                if (component instanceof JButton || component instanceof JLabel) {
+                    component.setCursor(CursorManager.getClickCursor());
+                } else {
+                    setCursor(CursorManager.getNormalCursor());
+                }
             }
         });
 
+        setButtonCursors(mainPanel);
+
+        // WindowListener สำหรับบันทึก inventory
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -68,11 +78,21 @@ public class MainGameWindow extends JFrame {
         setVisible(true);
     }
 
-    public void showPanel(String panelName) {
-        cardLayout.show(mainPanel, panelName);
+    private void setButtonCursors(Component component) {
+        if (component instanceof JButton) {
+            ((JButton) component).setCursor(CursorManager.getClickCursor());
+        } else if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                setButtonCursors(child);
+            }
+        }
     }
 
-    // เพิ่ม getter สำหรับ shopGame
+    public void showPanel(String panelName) {
+        cardLayout.show(mainPanel, panelName);
+        setButtonCursors(mainPanel);
+    }
+
     public ShopGame getShopGame() {
         return shopGame;
     }

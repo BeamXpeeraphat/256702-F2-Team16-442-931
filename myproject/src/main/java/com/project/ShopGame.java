@@ -11,11 +11,10 @@ import javax.imageio.ImageIO;
 public class ShopGame extends JPanel {
     private MainGameWindow mainGameWindow;
     private JButton[] leftButtons;
-    private JButton currentSelectedButton;
     private JLayeredPane layeredPane;
     private JLabel backgroundLabel;
     private Inventory inventory;
-    private JPanel leftPanel; // เพิ่มตัวแปรเพื่อเก็บ leftPanel
+    private JPanel leftPanel;
 
     public ShopGame(MainGameWindow mainGameWindow) {
         this.mainGameWindow = mainGameWindow;
@@ -65,7 +64,6 @@ public class ShopGame extends JPanel {
             }
         });
 
-        // สร้าง leftPanel ครั้งเดียวใน constructor
         leftPanel = createLeftPanel();
         layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER);
 
@@ -85,7 +83,7 @@ public class ShopGame extends JPanel {
 
         for (int i = 0; i < buttonLabels.length; i++) {
             JButton button = new JButton(buttonLabels[i]);
-            button.setBackground(Color.LIGHT_GRAY); // สีเริ่มต้นเป็นเทาอ่อน
+            button.setBackground(Color.LIGHT_GRAY);
             button.setFont(new Font("Arial", Font.BOLD, 14));
             leftButtons[i] = button;
 
@@ -95,9 +93,7 @@ public class ShopGame extends JPanel {
                     if (!button.getText().equals("Return")) {
                         resetButtonColors();
                         button.setBackground(Color.GRAY);
-                        currentSelectedButton = button;
                     }
-                    mainGameWindow.setCursor(CursorManager.getClickCursor());
                     updatePanel(button.getText());
                 }
             });
@@ -113,10 +109,9 @@ public class ShopGame extends JPanel {
     }
 
     private void updatePanel(String buttonLabel) {
-        // ลบเฉพาะเลเยอร์เนื้อหา ไม่สร้าง leftPanel ใหม่
         layeredPane.removeAll();
         layeredPane.add(backgroundLabel, JLayeredPane.DEFAULT_LAYER);
-        layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER); // ใช้ leftPanel เดิม
+        layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER);
 
         if (buttonLabel.equals("Return")) {
             if (inventory != null) {

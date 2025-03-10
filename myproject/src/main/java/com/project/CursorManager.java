@@ -12,30 +12,40 @@ public class CursorManager {
     static {
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         
-        // โหลดเคอร์เซอร์เลื่อนเมาส์
-        Image normalImage = toolkit.getImage(CursorManager.class.getResource("/com/project/color-pixels-purple-flower-cursor.png"));
-        if (normalImage == null) {
-            System.out.println("Error: Cannot load normal cursor image");
-            normalCursor = Cursor.getDefaultCursor(); // ใช้เคอร์เซอร์เริ่มต้นถ้าโหลดไม่สำเร็จ
-        } else {
-            normalCursor = toolkit.createCustomCursor(normalImage, new Point(0, 0), "Normal Cursor");
+        try {
+            Image normalImage = toolkit.getImage(CursorManager.class.getResource("/com/project/color-pixels-purple-flower-cursor.png"));
+            if (normalImage == null) {
+                System.err.println("Error: Cannot load normal cursor image at /com/project/color-pixels-purple-flower-cursor.png");
+                normalCursor = Cursor.getDefaultCursor();
+            } else {
+                normalCursor = toolkit.createCustomCursor(normalImage, new Point(0, 0), "Normal Cursor");
+                System.out.println("Normal cursor loaded successfully, size: " + normalImage.getWidth(null) + "x" + normalImage.getHeight(null));
+            }
+        } catch (Exception e) {
+            System.err.println("Exception loading normal cursor: " + e.getMessage());
+            normalCursor = Cursor.getDefaultCursor();
         }
 
-        // โหลดเคอร์เซอร์คลิกได้
-        Image clickImage = toolkit.getImage(CursorManager.class.getResource("/com/project/color-pixels-purple-flower-pointer.png"));
-        if (clickImage == null) {
-            System.out.println("Error: Cannot load click cursor image");
-            clickCursor = Cursor.getDefaultCursor(); // ใช้เคอร์เซอร์เริ่มต้นถ้าโหลดไม่สำเร็จ
-        } else {
-            clickCursor = toolkit.createCustomCursor(clickImage, new Point(0, 0), "Click Cursor");
+        try {
+            Image clickImage = toolkit.getImage(CursorManager.class.getResource("/com/project/color-pixels-purple-flower-pointer.png"));
+            if (clickImage == null) {
+                System.err.println("Error: Cannot load click cursor image at /com/project/color-pixels-purple-flower-pointer.png");
+                clickCursor = Cursor.getDefaultCursor();
+            } else {
+                clickCursor = toolkit.createCustomCursor(clickImage, new Point(0, 0), "Click Cursor");
+                System.out.println("Click cursor loaded successfully, size: " + clickImage.getWidth(null) + "x" + clickImage.getHeight(null));
+            }
+        } catch (Exception e) {
+            System.err.println("Exception loading click cursor: " + e.getMessage());
+            clickCursor = Cursor.getDefaultCursor();
         }
     }
 
     public static Cursor getNormalCursor() {
-        return normalCursor;
+        return normalCursor != null ? normalCursor : Cursor.getDefaultCursor();
     }
 
     public static Cursor getClickCursor() {
-        return clickCursor;
+        return clickCursor != null ? clickCursor : Cursor.getDefaultCursor();
     }
 }

@@ -4,8 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 public class HomePage extends JPanel {
     private MainGameWindow mainGameWindow;
@@ -25,21 +23,18 @@ public class HomePage extends JPanel {
         backgroundLabel.setLayout(new BorderLayout());
         add(backgroundLabel, BorderLayout.CENTER);
 
-        // สร้างปุ่ม
         JButton playButton = new JButton("Play");
         JButton howToPlayButton = new JButton("How to Play");
         JButton shopButton = new JButton("Shop");
         JButton infoButton = new JButton("Info");
         JButton exitButton = new JButton("Exit");
 
-        // บันทึกสีเริ่มต้นของปุ่มแต่ละปุ่ม
         Color defaultPlayColor = new Color(135, 206, 235);
         Color defaultHowToPlayColor = new Color(205, 133, 63);
         Color defaultShopColor = new Color(144, 238, 144);
         Color defaultInfoColor = new Color(255, 215, 0);
         Color defaultExitColor = new Color(255, 69, 0);
 
-        // ตั้งค่าฟอนต์ตัวอักษรและสีของปุ่มเริ่มต้น
         Font buttonFont = new Font("Arial", Font.BOLD, 20);
         Dimension buttonSize = new Dimension(200, 50);
         setupButton(playButton, defaultPlayColor, Color.BLACK, buttonFont, buttonSize);
@@ -48,7 +43,6 @@ public class HomePage extends JPanel {
         setupButton(infoButton, defaultInfoColor, Color.BLACK, buttonFont, buttonSize);
         setupButton(exitButton, defaultExitColor, Color.WHITE, buttonFont, buttonSize);
 
-        // Panel สำหรับปุ่มตรงกลาง
         JPanel menuPanel = new JPanel(new GridBagLayout());
         menuPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -63,42 +57,37 @@ public class HomePage extends JPanel {
 
         backgroundLabel.add(menuPanel, BorderLayout.CENTER);
 
-        // Panel สำหรับปุ่ม Shop, Info และ Exit (ล่างซ้าย)
+        // ปรับ bottomPanel ให้ปุ่มมีขนาดคงที่และอยู่มุมซ้าย
         JPanel bottomPanel = new JPanel(new GridLayout(3, 1, 0, 10));
         bottomPanel.setOpaque(false);
+        bottomPanel.setMaximumSize(new Dimension(200, 180));
         bottomPanel.add(shopButton);
         bottomPanel.add(infoButton);
         bottomPanel.add(exitButton);
 
-        // ปุ่ม Re:Game (ล่างขวา)
         JButton resetButton = new JButton("Re:Game");
         resetButton.setFont(new Font("Arial", Font.BOLD, 14));
         resetButton.setBackground(Color.RED);
         resetButton.setForeground(Color.WHITE);
-        resetButton.setPreferredSize(new Dimension(150, 50)); // ลด height เป็น 25 (ปรับได้ตามต้องการ)
-        resetButton.setMaximumSize(new Dimension(150, 50));   // จำกัดความสูงสูงสุด
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                resetGame();
-            }
-        });
+        resetButton.setPreferredSize(new Dimension(150, 50));
+        resetButton.addActionListener(e -> resetGame());
 
-        // ใส่ resetButton ใน JPanel แยกเพื่อควบคุมขนาด
-        JPanel resetPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 50, 10)); // เดิม (20, 0)
+        JPanel resetPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         resetPanel.setOpaque(false);
         resetPanel.add(resetButton);
 
-        // รวม bottomPanel และ resetPanel ใน container เดียว
+        // ปรับ bottomContainer ให้ bottomPanel อยู่มุมซ้าย
         JPanel bottomContainer = new JPanel(new BorderLayout());
         bottomContainer.setOpaque(false);
-        bottomContainer.add(bottomPanel, BorderLayout.WEST); // วาง Shop, Info, Exit ทางซ้าย
-        bottomContainer.add(resetPanel, BorderLayout.EAST);  // วาง Re:Game ทางขวา
-        bottomContainer.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // ระยะห่างจากขอบ
+        JPanel leftWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+        leftWrapper.setOpaque(false);
+        leftWrapper.add(bottomPanel);
+        bottomContainer.add(leftWrapper, BorderLayout.WEST);
+        bottomContainer.add(resetPanel, BorderLayout.EAST);
+        bottomContainer.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         backgroundLabel.add(bottomContainer, BorderLayout.SOUTH);
 
-        // เพิ่มเอฟเฟกต์เปลี่ยนสีและเคอร์เซอร์เมื่อโฮเวอร์/คลิก
         addHoverEffect(playButton, defaultPlayColor);
         addHoverEffect(howToPlayButton, defaultHowToPlayColor);
         addHoverEffect(shopButton, defaultShopColor);
@@ -106,9 +95,9 @@ public class HomePage extends JPanel {
         addHoverEffect(exitButton, defaultExitColor);
         addHoverEffect(resetButton, Color.RED);
 
-        // กำหนด ActionListener
         playButton.addActionListener(e -> mainGameWindow.showPanel("LevelGame"));
-        howToPlayButton.addActionListener(e -> JOptionPane.showMessageDialog(this,
+        shopButton.addActionListener(e -> mainGameWindow.showPanel("ShopGame"));
+        howToPlayButton.addActionListener(e -> CustomMessageDialog.showMessageDialog(this,
             "<html><center><b><font size='6'>How to play</font></b></center><br>" +
             "<font size='4'>" +
             "- Press A to move left<br>" +
@@ -117,14 +106,13 @@ public class HomePage extends JPanel {
             "- Press H to honk the horn<br>" +
             "- Press P or ESC to pause the game and open various menus<br>" +
             "- Press M to enter the shop screen or change vehicles" +
-            "</font></html>"));
-        shopButton.addActionListener(e -> mainGameWindow.showPanel("ShopGame"));
-        infoButton.addActionListener(e -> JOptionPane.showMessageDialog(this,
+            "</font></html>", "How to Play", JOptionPane.INFORMATION_MESSAGE));
+        infoButton.addActionListener(e -> CustomMessageDialog.showMessageDialog(this,
             "<html><b><font size='4'>This game is created and developed by <br>" +
             "the collaboration between the project team <br>" +
-            "codename: Mr.442 , Mr.931 </font></b><br></html>"));
+            "codename: Mr.442 , Mr.931 </font></b><br></html>", "Info", JOptionPane.INFORMATION_MESSAGE));
         exitButton.addActionListener(e -> {
-            int result = JOptionPane.showConfirmDialog(
+            int result = CustomMessageDialog.showConfirmDialog(
                 this,
                 "Are you sure you want to exit?",
                 "Exit Confirmation",
@@ -142,6 +130,7 @@ public class HomePage extends JPanel {
         button.setBackground(bgColor);
         button.setForeground(fgColor);
         button.setPreferredSize(size);
+        button.setMaximumSize(size);
     }
 
     private Color darkenColor(Color color, float factor) {
@@ -156,29 +145,17 @@ public class HomePage extends JPanel {
             @Override
             public void mouseEntered(MouseEvent e) {
                 button.setBackground(darkenColor(defaultColor, 0.6f));
-                mainGameWindow.setCursor(CursorManager.getClickCursor());
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 button.setBackground(defaultColor);
-                mainGameWindow.setCursor(CursorManager.getNormalCursor());
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                mainGameWindow.setCursor(CursorManager.getClickCursor());
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                mainGameWindow.setCursor(CursorManager.getNormalCursor());
             }
         });
     }
 
     private void resetGame() {
-        int result = JOptionPane.showConfirmDialog(
+        int result = CustomMessageDialog.showConfirmDialog(
             this,
             "<html><center><b><span style=\"font-size: 20px;\">Are you sure you want to reset the game?<br>All progress will be lost.</span></b></center></html>",
             "Reset Confirmation",
@@ -191,7 +168,7 @@ public class HomePage extends JPanel {
                 Inventory inventory = shopGame.getInventory();
                 inventory.resetToDefault();
                 inventory.saveToFile();
-                JOptionPane.showMessageDialog(this, "Game has been reset to default!");
+                CustomMessageDialog.showMessageDialog(this, "Game has been reset to default!", "Reset Complete", JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
