@@ -6,7 +6,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class LevelGame extends JPanel {
-    @SuppressWarnings("unused") // ปิด warning ว่า mainGameWindow ไม่ถูกใช้
     private MainGameWindow mainGameWindow;
 
     public LevelGame(MainGameWindow mainGameWindow) {
@@ -14,7 +13,19 @@ public class LevelGame extends JPanel {
         setLayout(new BorderLayout());
 
         ImageIcon backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofgame.jpg"));
-        JLabel backgroundLabel = new JLabel(backgroundImage);
+JLabel backgroundLabel = new JLabel(backgroundImage) {
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (backgroundImage.getImage() != null) {
+            g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+        } else {
+            System.err.println("Error: backgroundofgame.jpg not found!");
+            g.setColor(Color.GRAY);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
+};
         backgroundLabel.setLayout(new BorderLayout());
         add(backgroundLabel, BorderLayout.CENTER);
 
@@ -26,27 +37,27 @@ public class LevelGame extends JPanel {
 
         JButton level1Button = new JButton("Level 1");
         JButton level2Button = new JButton("Level 2");
-        JButton level3Button = new JButton("Level 3");
+        JButton level0Button = new JButton("Coming soon");
         JButton backButton = new JButton("Back");
 
         Font buttonFont = new Font("Arial", Font.BOLD, 20);
         level1Button.setFont(buttonFont);
         level2Button.setFont(buttonFont);
-        level3Button.setFont(buttonFont);
+        level0Button.setFont(buttonFont);
         backButton.setFont(buttonFont);
         level1Button.setBackground(new Color(192, 192, 192));
         level1Button.setForeground(Color.BLACK);
         level2Button.setBackground(new Color(169, 169, 169));
         level2Button.setForeground(Color.BLACK);
-        level3Button.setBackground(new Color(169, 169, 169));
-        level3Button.setForeground(Color.BLACK);
+        level0Button.setBackground(new Color(169, 169, 169));
+        level0Button.setForeground(Color.BLACK);
         backButton.setBackground(new Color(255, 69, 0));
         backButton.setForeground(Color.WHITE);
 
         Dimension buttonSize = new Dimension(200, 50);
         level1Button.setPreferredSize(buttonSize);
         level2Button.setPreferredSize(buttonSize);
-        level3Button.setPreferredSize(buttonSize);
+        level0Button.setPreferredSize(buttonSize);
         backButton.setPreferredSize(buttonSize);
 
         gbc.gridx = 0;
@@ -55,7 +66,7 @@ public class LevelGame extends JPanel {
         gbc.gridy = 1;
         levelPanel.add(level2Button, gbc);
         gbc.gridy = 2;
-        levelPanel.add(level3Button, gbc);
+        levelPanel.add(level0Button, gbc);
         gbc.gridy = 3;
         levelPanel.add(backButton, gbc);
 
@@ -63,12 +74,12 @@ public class LevelGame extends JPanel {
 
         addHoverEffect(level1Button, new Color(50, 205, 50));
         addHoverEffect(level2Button, new Color(50, 205, 50));
-        addHoverEffect(level3Button, new Color(50, 205, 50));
+        addHoverEffect(level0Button, new Color(50, 205, 50));
         addHoverEffect(backButton, new Color(255, 69, 0));
 
-        level1Button.addActionListener(e -> CustomMessageDialog.showMessageDialog(this, "Starting Level 1!", "Level 1", JOptionPane.INFORMATION_MESSAGE));
-        level2Button.addActionListener(e -> CustomMessageDialog.showMessageDialog(this, "Starting Level 2!", "Level 2", JOptionPane.INFORMATION_MESSAGE));
-        level3Button.addActionListener(e -> CustomMessageDialog.showMessageDialog(this, "Coming Soon!", "Level 3", JOptionPane.INFORMATION_MESSAGE));
+        level1Button.addActionListener(e -> mainGameWindow.showPanel("LevelOne"));
+        level2Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Level 2 is coming soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE));
+        level0Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Coming Soon!", "Coming Soon!", JOptionPane.INFORMATION_MESSAGE));
         backButton.addActionListener(e -> mainGameWindow.showPanel("HomePage"));
     }
 

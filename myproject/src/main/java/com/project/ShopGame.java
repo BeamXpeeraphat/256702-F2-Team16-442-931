@@ -10,15 +10,20 @@ import javax.imageio.ImageIO;
 
 public class ShopGame extends JPanel {
     private MainGameWindow mainGameWindow;
+    private Object origin;
     private JButton[] leftButtons;
     private JLayeredPane layeredPane;
     private JLabel backgroundLabel;
     private Inventory inventory;
     private JPanel leftPanel;
 
-    public ShopGame(MainGameWindow mainGameWindow) {
+    public ShopGame(MainGameWindow mainGameWindow, Object origin) {
         this.mainGameWindow = mainGameWindow;
+        this.origin = origin;
         setLayout(new BorderLayout());
+
+        this.inventory = mainGameWindow.getInventory(); // ใช้ Inventory เดียวจาก MainGameWindow
+        System.out.println("Inventory initialized in ShopGame constructor, origin: " + (origin != null ? origin.getClass().getSimpleName() : "null"));
 
         layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new Dimension(800, 600));
@@ -69,8 +74,12 @@ public class ShopGame extends JPanel {
 
         add(layeredPane, BorderLayout.CENTER);
 
-        revalidate();
-        repaint();
+        if (origin instanceof Setting) {
+            updatePanel("Inventory");
+        } else {
+            revalidate();
+            repaint();
+        }
     }
 
     private JPanel createLeftPanel() {
@@ -109,21 +118,32 @@ public class ShopGame extends JPanel {
     }
 
     private void updatePanel(String buttonLabel) {
-        layeredPane.removeAll();
-        layeredPane.add(backgroundLabel, JLayeredPane.DEFAULT_LAYER);
-        layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER);
+        Component[] components = layeredPane.getComponentsInLayer(JLayeredPane.MODAL_LAYER);
+        for (Component comp : components) {
+            layeredPane.remove(comp);
+        }
 
         if (buttonLabel.equals("Return")) {
             if (inventory != null) {
                 inventory.saveToFile();
             }
-            mainGameWindow.showPanel("HomePage");
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (origin instanceof Setting) {
+                Setting setting = (Setting) origin;
+                setting.setVisible(true);
+                System.out.println("Returning to Setting");
+                if (window != null) {
+                    window.dispose();
+                }
+            } else {
+                mainGameWindow.showPanel("HomePage");
+                System.out.println("Returning to HomePage (default behavior)");
+            }
         } else {
             JPanel contentPanel = null;
             switch (buttonLabel) {
                 case "Motorcycle":
                     contentPanel = new MotorcyclePanel(mainGameWindow);
-                    inventory = ((MotorcyclePanel) contentPanel).getInventory();
                     break;
                 case "Purchase":
                     contentPanel = new PurchasePanel(mainGameWindow);
@@ -132,13 +152,7 @@ public class ShopGame extends JPanel {
                     contentPanel = new ContactPanel(mainGameWindow);
                     break;
                 case "Inventory":
-                    if (inventory == null) {
-                        contentPanel = new MotorcyclePanel(mainGameWindow);
-                        inventory = ((MotorcyclePanel) contentPanel).getInventory();
-                        contentPanel = inventory;
-                    } else {
-                        contentPanel = inventory;
-                    }
+                    contentPanel = inventory;
                     break;
             }
             if (contentPanel != null) {

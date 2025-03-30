@@ -57,7 +57,6 @@ public class HomePage extends JPanel {
 
         backgroundLabel.add(menuPanel, BorderLayout.CENTER);
 
-        // ปรับ bottomPanel ให้ปุ่มมีขนาดคงที่และอยู่มุมซ้าย
         JPanel bottomPanel = new JPanel(new GridLayout(3, 1, 0, 10));
         bottomPanel.setOpaque(false);
         bottomPanel.setMaximumSize(new Dimension(200, 180));
@@ -76,7 +75,6 @@ public class HomePage extends JPanel {
         resetPanel.setOpaque(false);
         resetPanel.add(resetButton);
 
-        // ปรับ bottomContainer ให้ bottomPanel อยู่มุมซ้าย
         JPanel bottomContainer = new JPanel(new BorderLayout());
         bottomContainer.setOpaque(false);
         JPanel leftWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
@@ -96,7 +94,7 @@ public class HomePage extends JPanel {
         addHoverEffect(resetButton, Color.RED);
 
         playButton.addActionListener(e -> mainGameWindow.showPanel("LevelGame"));
-        shopButton.addActionListener(e -> mainGameWindow.showPanel("ShopGame"));
+        shopButton.addActionListener(e -> mainGameWindow.showPanel("ShopGame")); // กลับไปใช้ showPanel
         howToPlayButton.addActionListener(e -> CustomMessageDialog.showMessageDialog(this,
             "<html><center><b><font size='6'>How to play</font></b></center><br>" +
             "<font size='4'>" +

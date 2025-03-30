@@ -11,6 +11,7 @@ public class MainGameWindow extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private ShopGame shopGame;
+    private Inventory inventory; // ตัวแปรสำหรับ Inventory เดียว
 
     public MainGameWindow() {
         setTitle("Adventure Rider Game");
@@ -23,19 +24,27 @@ public class MainGameWindow extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        HomePage homePage = new HomePage(this);
-        LevelGame levelGame = new LevelGame(this);
-        shopGame = new ShopGame(this);
+        try {
+            inventory = new Inventory(this); // สร้าง Inventory ครั้งเดียว
+            HomePage homePage = new HomePage(this);
+            LevelGame levelGame = new LevelGame(this);
+            shopGame = new ShopGame(this, null);
+            LevelOne levelOne = new LevelOne(this);
 
-        mainPanel.add(homePage, "HomePage");
-        mainPanel.add(levelGame, "LevelGame");
-        mainPanel.add(shopGame, "ShopGame");
+            mainPanel.add(homePage, "HomePage");
+            mainPanel.add(levelGame, "LevelGame");
+            mainPanel.add(shopGame, "ShopGame");
+            mainPanel.add(levelOne, "LevelOne");
 
-        add(mainPanel);
+            add(mainPanel);
+            cardLayout.show(mainPanel, "HomePage");
+        } catch (Exception e) {
+            System.err.println("Error initializing panels: " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to initialize game: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
 
-        cardLayout.show(mainPanel, "HomePage");
-
-        // MouseListener สำหรับเข้า/ออกหน้าต่าง
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -48,7 +57,6 @@ public class MainGameWindow extends JFrame {
             }
         });
 
-        // MouseMotionListener สำหรับปุ่มและ JLabel
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -63,12 +71,11 @@ public class MainGameWindow extends JFrame {
 
         setButtonCursors(mainPanel);
 
-        // WindowListener สำหรับบันทึก inventory
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (shopGame != null && shopGame.getInventory() != null) {
-                    shopGame.getInventory().saveToFile();
+                if (inventory != null) {
+                    inventory.saveToFile();
                     System.out.println("Saved inventory on exit.");
                 }
                 System.exit(0);
@@ -89,11 +96,41 @@ public class MainGameWindow extends JFrame {
     }
 
     public void showPanel(String panelName) {
-        cardLayout.show(mainPanel, panelName);
-        setButtonCursors(mainPanel);
+        try {
+            cardLayout.show(mainPanel, panelName);
+            Component[] components = mainPanel.getComponents();
+            for (Component comp : components) {
+                if (comp.isVisible() && comp instanceof JPanel) {
+                    comp.requestFocusInWindow();
+                    System.out.println("Focus requested for panel: " + panelName);
+                    break;
+                }
+            }
+            System.out.println("Switched to panel: " + panelName);
+            mainPanel.revalidate();
+            mainPanel.repaint();
+        } catch (Exception e) {
+            System.err.println("Error showing panel " + panelName + ": " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public ShopGame getShopGame() {
         return shopGame;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    public JFrame getFrame() {
+        return this;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            MainGameWindow window = new MainGameWindow();
+            window.setVisible(true);
+        });
     }
 }
