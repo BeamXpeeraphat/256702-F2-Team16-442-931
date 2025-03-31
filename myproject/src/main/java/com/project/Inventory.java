@@ -72,6 +72,7 @@ public class Inventory extends JPanel {
             ownedMotorcycles.add(motorcycleName);
             updateInventoryDisplay();
             saveToFile();
+            System.out.println("Added motorcycle: " + motorcycleName); // Log เพื่อดีบั๊ก
         }
     }
 
@@ -160,7 +161,7 @@ public class Inventory extends JPanel {
         rightPanel.repaint();
     }
 
-    private void updateInventoryDisplay() {
+    public void updateInventoryDisplay() {
         if (coinLabel != null) {
             coinLabel.setText("Coins: " + coins);
         }
@@ -198,7 +199,7 @@ public class Inventory extends JPanel {
                                 mainLevel.notifyMotorcycleChanged();
                                 System.out.println("Notified MainLevel: Selected motorcycle changed to " + motorcycleName);
                             } else {
-                                System.err.println("MainLevel is null, cannot notify!");
+                                System.err.println("MainLevel is null in setSelectedMotorcycle!");
                             }
                         }
                     });
@@ -213,6 +214,7 @@ public class Inventory extends JPanel {
 
         rightPanel.revalidate();
         rightPanel.repaint();
+        System.out.println("Inventory updated with " + ownedMotorcycles.size() + " motorcycles"); // Log เพื่อดีบั๊ก
     }
 
     private ImageIcon loadImage(String imageName) {

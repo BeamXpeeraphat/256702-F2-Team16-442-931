@@ -143,7 +143,7 @@ public class ShopGame extends JPanel {
             JPanel contentPanel = null;
             switch (buttonLabel) {
                 case "Motorcycle":
-                    contentPanel = new MotorcyclePanel(mainGameWindow);
+                    contentPanel = new MotorcyclePanel(mainGameWindow, inventory); // ส่ง inventory เข้าไปด้วย
                     break;
                 case "Purchase":
                     contentPanel = new PurchasePanel(mainGameWindow);

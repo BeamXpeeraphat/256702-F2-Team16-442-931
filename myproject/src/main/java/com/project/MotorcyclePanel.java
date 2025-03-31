@@ -8,11 +8,11 @@ import java.awt.event.MouseEvent;
 public class MotorcyclePanel extends JPanel {
     private JPanel rightPanel;
     private JLayeredPane layeredPane;
-    private Inventory inventory;
+    private Inventory inventory; // ใช้ Inventory ที่ส่งเข้ามา
     private JLabel coinsLabel;
 
-    public MotorcyclePanel(MainGameWindow mainGameWindow) {
-        this.inventory = new Inventory(mainGameWindow);
+    public MotorcyclePanel(MainGameWindow mainGameWindow, Inventory inventory) {
+        this.inventory = inventory; // รับ Inventory จากพารามิเตอร์
         setLayout(null);
         setOpaque(false);
 
@@ -92,6 +92,7 @@ public class MotorcyclePanel extends JPanel {
                                     inventory.addMotorcycle(motorcycleName);
                                     int remainingCoins = inventory.getCoins();
                                     updateCoinsDisplay();
+                                    inventory.updateInventoryDisplay(); // อัปเดต UI ของ Inventory
                                     CustomMessageDialog.showMessageDialog(MotorcyclePanel.this, 
                                         "Buy " + motorcycleName + " complete!\nBalance: " + remainingCoins + " Coin",
                                         "Purchase Confirmation", 
@@ -120,7 +121,7 @@ public class MotorcyclePanel extends JPanel {
             coinsLabel = new JLabel(String.valueOf(inventory.getCoins()));
             coinsLabel.setFont(new Font("Arial", Font.BOLD, 25));
             coinsLabel.setForeground(Color.WHITE);
-            coinsLabel.setBounds(62, 31, 100, 30); // ปรับตำแหน่งตามดีไซน์ของ TabCoins.png
+            coinsLabel.setBounds(62, 31, 100, 30);
             layeredPane.add(coinsLabel, Integer.valueOf(1));
         }
 
@@ -156,13 +157,13 @@ public class MotorcyclePanel extends JPanel {
             int originalHeight = icon.getIconHeight();
             int newWidth, newHeight;
 
-            if (targetHeight == -1) { // คงสัดส่วนตามความกว้าง
+            if (targetHeight == -1) {
                 newWidth = targetWidth;
                 newHeight = (int) ((double) originalHeight * newWidth / originalWidth);
-            } else if (targetWidth == -1) { // คงสัดส่วนตามความสูง
+            } else if (targetWidth == -1) {
                 newHeight = targetHeight;
                 newWidth = (int) ((double) originalWidth * newHeight / originalHeight);
-            } else { // ใช้ทั้งความกว้างและความสูงที่ระบุ (อาจบิดเบี้ยว)
+            } else {
                 newWidth = targetWidth;
                 newHeight = targetHeight;
             }
