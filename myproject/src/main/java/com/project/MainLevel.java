@@ -3,6 +3,7 @@ package com.project;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 public abstract class MainLevel extends JPanel {
     protected MainGameWindow mainGameWindow;
@@ -12,6 +13,7 @@ public abstract class MainLevel extends JPanel {
     private Image backgroundImage;
     protected Timer gameTimer;
     protected int gameTime = 0;
+    protected int levelCoins = 0;
     protected JLabel motorcycleLabel;
     protected int motorcycleX = 50;
     protected int motorcycleY = 700;
@@ -20,20 +22,24 @@ public abstract class MainLevel extends JPanel {
     protected int gravity = 1;
     protected int motorcycleVY = 0;
     protected boolean isJumping = false;
-    private boolean wPressed = false;
-    private boolean aPressed = false;
-    private boolean dPressed = false;
+    protected boolean wPressed = false;
+    protected boolean aPressed = false;
+    protected boolean dPressed = false;
+    protected boolean isGameActive = false;
+    protected ArrayList<JLabel> coins;
+    protected JLabel goalLabel; // เพิ่มตัวแปรสำหรับเส้นชัย
 
     public MainLevel(MainGameWindow mainGameWindow) {
         this.mainGameWindow = mainGameWindow;
         this.inventory = mainGameWindow.getInventory();
         this.inventory.setMainLevel(this);
         setLayout(null);
+        coins = new ArrayList<>();
         loadBackgroundImage();
         initializeUI();
         initializeMotorcycle();
         setupControls();
-        startTimer();
+        resetLevelStats();
     }
 
     private void loadBackgroundImage() {
@@ -48,16 +54,24 @@ public abstract class MainLevel extends JPanel {
     }
 
     protected void initializeUI() {
-        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        statusPanel.setBounds(0, 0, getWidth(), 50);
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         statusPanel.setOpaque(false);
-        coinLabel = new JLabel("Coins: " + (inventory != null ? inventory.getCoins() : 0));
+        statusPanel.setBounds(0, 10, getWidth(), 50);
+        coinLabel = new JLabel("Coins: " + levelCoins);
         timeLabel = new JLabel("Time: 00:00");
         coinLabel.setFont(new Font("Arial", Font.BOLD, 16));
         timeLabel.setFont(new Font("Arial", Font.BOLD, 16));
         statusPanel.add(coinLabel);
         statusPanel.add(timeLabel);
         add(statusPanel);
+        System.out.println("Initialized UI: coinLabel = " + coinLabel.getText() + ", timeLabel = " + timeLabel.getText());
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                statusPanel.setBounds(0, 10, getWidth(), 50);
+            }
+        });
 
         revalidate();
         repaint();
@@ -131,7 +145,7 @@ public abstract class MainLevel extends JPanel {
         movementTimer.start();
     }
 
-    private void regainFocus() {
+    protected void regainFocus() {
         SwingUtilities.invokeLater(() -> {
             setFocusable(true);
             requestFocusInWindow();
@@ -140,11 +154,14 @@ public abstract class MainLevel extends JPanel {
                 System.out.println("Focus successfully regained by MainLevel");
             } else {
                 System.out.println("Failed to regain focus for MainLevel");
+                mainGameWindow.getFrame().toFront();
+                requestFocusInWindow();
             }
         });
     }
 
     public void updateMotorcycle() {
+        if (!isGameActive) return; // หยุดการเคลื่อนที่ถ้าเกมไม่active
         if (aPressed && motorcycleX > 0) {
             motorcycleX -= motorcycleSpeed;
         }
@@ -159,7 +176,7 @@ public abstract class MainLevel extends JPanel {
         if (isJumping) {
             motorcycleY += motorcycleVY;
             motorcycleVY += gravity;
-            if (motorcycleY >= 700) { // เปลี่ยนพื้นดินจาก 500 เป็น 700
+            if (motorcycleY >= 700) {
                 motorcycleY = 700;
                 motorcycleVY = 0;
                 isJumping = false;
@@ -167,6 +184,8 @@ public abstract class MainLevel extends JPanel {
         }
         if (motorcycleLabel != null) {
             motorcycleLabel.setLocation(motorcycleX, motorcycleY);
+            checkCoinCollision();
+            checkGoalCollision(); // ตรวจจับการชนเส้นชัย
         }
     }
 
@@ -182,44 +201,56 @@ public abstract class MainLevel extends JPanel {
     }
 
     protected void startTimer() {
+        if (!isGameActive) return;
+        if (gameTimer != null && gameTimer.isRunning()) {
+            gameTimer.stop();
+        }
         gameTimer = new Timer(1000, e -> {
             gameTime++;
             int minutes = gameTime / 60;
             int seconds = gameTime % 60;
             timeLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
+            repaint();
         });
         gameTimer.start();
+        System.out.println("Timer started");
     }
 
     protected void stopTimer() {
         if (gameTimer != null) gameTimer.stop();
+        System.out.println("Timer stopped");
     }
 
     protected void showSettings() {
         stopTimer();
+        isGameActive = false;
         Setting settingDialog = new Setting(this);
         settingDialog.setVisible(true);
     }
 
     protected void resumeGame() {
+        isGameActive = true;
         startTimer();
         regainFocus();
     }
 
     protected void restartLevel() {
+        updateInventoryCoins();
+        resetLevelStats();
         stopTimer();
-        gameTime = 0;
-        timeLabel.setText("Time: 00:00");
         motorcycleX = 50;
-        motorcycleY = 500;
+        motorcycleY = 700;
         motorcycleVY = 0;
         isJumping = false;
         wPressed = false;
         aPressed = false;
         dPressed = false;
         if (motorcycleLabel != null) motorcycleLabel.setLocation(motorcycleX, motorcycleY);
+        coins.clear();
+        isGameActive = true;
         startTimer();
         startLevel();
+        repaint();
     }
 
     protected void showMotorcycleSelection() {
@@ -227,7 +258,9 @@ public abstract class MainLevel extends JPanel {
     }
 
     protected void returnToLevelGame() {
+        updateInventoryCoins();
         stopTimer();
+        isGameActive = false;
         mainGameWindow.showPanel("LevelGame");
     }
 
@@ -257,6 +290,120 @@ public abstract class MainLevel extends JPanel {
         } else {
             System.err.println("No selected motorcycle to update!");
         }
+    }
+
+    protected void resetLevelStats() {
+        gameTime = 0;
+        levelCoins = 0;
+        timeLabel.setText("Time: 00:00");
+        coinLabel.setText("Coins: " + levelCoins);
+        repaint();
+    }
+
+    public void addCoins(int amount) {
+        levelCoins += amount;
+        coinLabel.setText("Coins: " + levelCoins);
+        repaint();
+        System.out.println("Added " + amount + " coins, total now: " + levelCoins);
+    }
+
+    protected void updateInventoryCoins() {
+        if (levelCoins > 0) {
+            inventory.addCoins(levelCoins);
+            System.out.println("Added " + levelCoins + " coins to Inventory. Total now: " + inventory.getCoins());
+        }
+    }
+
+    public int getLevelCoins() {
+        return levelCoins;
+    }
+
+    public int getGameTime() {
+        return gameTime;
+    }
+
+    protected void initializeCoins(int[] xPositions, int yPosition) {
+        ImageIcon coinIcon = new ImageIcon(getClass().getClassLoader().getResource("com/project/coin.png"));
+        if (coinIcon.getImage() == null) {
+            System.err.println("Failed to load coin.png");
+            return;
+        }
+        Image scaledCoin = coinIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        coinIcon = new ImageIcon(scaledCoin);
+
+        for (int x : xPositions) {
+            JLabel coinLabel = new JLabel(coinIcon);
+            coinLabel.setBounds(x, yPosition, 30, 30);
+            coins.add(coinLabel);
+            add(coinLabel);
+        }
+        revalidate();
+        repaint();
+    }
+
+    protected void checkCoinCollision() {
+        if (motorcycleLabel == null) return;
+        Rectangle motorcycleBounds = new Rectangle(motorcycleX, motorcycleY, 100, 100);
+        for (int i = coins.size() - 1; i >= 0; i--) {
+            JLabel coin = coins.get(i);
+            Rectangle coinBounds = coin.getBounds();
+            if (motorcycleBounds.intersects(coinBounds)) {
+                coins.remove(i);
+                remove(coin);
+                addCoins(10);
+                System.out.println("Coin collected! Total coins: " + levelCoins);
+                revalidate();
+                repaint();
+            }
+        }
+    }
+
+    // เพิ่มเมธอดสำหรับตรวจจับการชนเส้นชัย
+    protected void checkGoalCollision() {
+        if (goalLabel == null || motorcycleLabel == null) return;
+        Rectangle motorcycleBounds = new Rectangle(motorcycleX, motorcycleY, 100, 100);
+        Rectangle goalBounds = goalLabel.getBounds();
+        // ชนะเมื่อมอเตอร์ไซค์ถึงครึ่งหนึ่งของเส้นชัย
+        int goalMidPoint = goalBounds.x + (goalBounds.width / 2);
+        if (motorcycleBounds.intersects(goalBounds) && motorcycleX + 100 >= goalMidPoint) {
+            isGameActive = false; // หยุดเกม
+            stopTimer(); // หยุดเวลา
+            showWinDialog(); // แสดงหน้าต่างชนะ
+        }
+    }
+
+    // เพิ่มเมธอดแสดงหน้าต่างชนะ
+    protected void showWinDialog() {
+        JDialog winDialog = new JDialog(mainGameWindow.getFrame(), "You Win!", true);
+        winDialog.setLayout(new GridLayout(4, 1, 10, 10));
+        winDialog.setSize(300, 200);
+        winDialog.setLocationRelativeTo(this);
+
+        JLabel winLabel = new JLabel("You Win!", SwingConstants.CENTER);
+        winLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        winDialog.add(winLabel);
+
+        JButton backButton = new JButton("Back to Main Menu");
+        backButton.addActionListener(e -> {
+            returnToLevelGame();
+            winDialog.dispose();
+        });
+        winDialog.add(backButton);
+
+        JButton replayButton = new JButton("Play Again");
+        replayButton.addActionListener(e -> {
+            restartLevel();
+            winDialog.dispose();
+        });
+        winDialog.add(replayButton);
+
+        JButton nextLevelButton = new JButton("Next Level");
+        nextLevelButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(winDialog, "Level 2 Coming Soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+        });
+        winDialog.add(nextLevelButton);
+
+        winDialog.setVisible(true);
     }
 
     public abstract void startLevel();

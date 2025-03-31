@@ -1,4 +1,4 @@
-Coins: 100
+Coins: 820
 SelectedMotorcycle: motorcycle4.png
 Motorcycles:
 motorcycle1.png

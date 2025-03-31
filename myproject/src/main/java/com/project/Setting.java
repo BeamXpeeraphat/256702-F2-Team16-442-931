@@ -20,7 +20,7 @@ public class Setting extends JDialog {
 
         JButton resumeButton = new JButton("Resume");
         resumeButton.addActionListener(e -> {
-            dispose(); // ปิด dialog ก่อนเพื่อให้โฟกัสกลับไปที่ MainLevel
+            dispose(); // ปิด dialog และกลับไปที่เกม
         });
         add(resumeButton);
 
@@ -38,10 +38,17 @@ public class Setting extends JDialog {
         });
         add(returnButton);
 
+        // จัดการเมื่อปิด Dialog ไม่ว่าจะด้วยปุ่มกากบาทหรือ Resume
         addWindowListener(new WindowAdapter() {
             @Override
+            public void windowClosing(WindowEvent e) {
+                mainLevel.resumeGame(); // เริ่มเกมต่อเมื่อปิดด้วยกากบาท
+                System.out.println("Setting dialog closed via X, resuming game");
+            }
+
+            @Override
             public void windowClosed(WindowEvent e) {
-                mainLevel.resumeGame();
+                mainLevel.resumeGame(); // เริ่มเกมต่อเมื่อปิดด้วยวิธีใดก็ตาม
                 System.out.println("Setting dialog closed, resuming game");
             }
         });
@@ -58,8 +65,7 @@ public class Setting extends JDialog {
             @Override
             public void windowClosed(WindowEvent e) {
                 mainLevel.updateMotorcycleImage();
-                mainLevel.resumeGame();
-                System.out.println("Shop dialog closed, resuming game");
+                System.out.println("Shop dialog closed");
             }
         });
         shopDialog.setVisible(true);

@@ -9,15 +9,49 @@ public class LevelOne extends MainLevel {
 
     public LevelOne(MainGameWindow mainGameWindow) {
         super(mainGameWindow);
-        setFocusable(true); // ทำให้แน่ใจว่าแผงสามารถรับเหตุการณ์คีย์ได้
+        motorcycleY = 700;
+        setFocusable(true);
         initializeLevelOneUI();
         startLevel();
-        regainFocus(); // เรียกเพื่อให้แน่ใจว่าเริ่มต้นด้วยโฟกัสที่ LevelOne
+        regainFocus();
     }
 
     @Override
     public void startLevel() {
         System.out.println("Level 1 started!");
+        // ลบเหรียญเก่าทั้งหมดออกจาก UI
+        Component[] components = getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JLabel && comp != coinLabel && comp != timeLabel && comp != motorcycleLabel && comp != goalLabel) {
+                remove(comp); // ลบ JLabel ที่ไม่ใช่ UI หลัก (เช่น เหรียญเก่า)
+            }
+        }
+        coins.clear(); // ล้างรายการ coins
+
+        // สร้างเหรียญใหม่
+        int[] coinXPositions = {200, 400, 600};
+        initializeCoins(coinXPositions, 650);
+
+        // ลบเส้นชัยเก่า (ถ้ามี) และสร้างใหม่
+        if (goalLabel != null) {
+            remove(goalLabel);
+        }
+        ImageIcon goalIcon = new ImageIcon(getClass().getClassLoader().getResource("com/project/Goal.png"));
+        if (goalIcon.getImage() == null) {
+            System.err.println("Failed to load Goal.png");
+            goalLabel = new JLabel("Goal");
+            goalLabel.setBounds(1400, 650, 100, 100);
+        } else {
+            Image scaledGoal = goalIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            goalLabel = new JLabel(new ImageIcon(scaledGoal));
+            goalLabel.setBounds(1400, 650, 100, 100);
+        }
+        add(goalLabel);
+
+        isGameActive = true;
+        startTimer();
+        revalidate();
+        repaint();
     }
 
     private void initializeLevelOneUI() {
@@ -29,25 +63,28 @@ public class LevelOne extends MainLevel {
             settingIcon = new ImageIcon(settingIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
             settingButton = new JButton(settingIcon);
         }
-        int buttonX = 1460; // ปรับตำแหน่งตามต้องการ
+        int buttonX = 1460;
         int buttonY = 25;
         settingButton.setBounds(buttonX, buttonY, 50, 50);
-        settingButton.setFocusable(false); // ป้องกันปุ่มขโมยโฟกัส
+        settingButton.setFocusable(false);
         settingButton.addActionListener(e -> {
             showSettings();
-            regainFocus(); // คืนโฟกัสให้ LevelOne หลังจากกดปุ่ม
+            regainFocus();
         });
         add(settingButton);
+
+        revalidate();
+        repaint();
     }
 
-    // Override resumeGame เพื่อให้แน่ใจว่าโฟกัสกลับมา
     @Override
-    protected void resumeGame() {
+    public void resumeGame() {
         super.resumeGame();
-        regainFocus(); // บังคับโฟกัสกลับมาที่ LevelOne
+        regainFocus();
     }
 
-    private void regainFocus() {
+    @Override
+    protected void regainFocus() {
         SwingUtilities.invokeLater(() -> {
             setFocusable(true);
             requestFocusInWindow();

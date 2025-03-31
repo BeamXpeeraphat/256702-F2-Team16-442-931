@@ -318,6 +318,12 @@ public class Inventory extends JPanel {
         return coins;
     }
 
+    public void addCoins(int amount) {
+        coins += amount;
+        updateInventoryDisplay();
+        saveToFile();
+    }
+
     public String getSelectedMotorcycle() {
         return selectedMotorcycle;
     }
