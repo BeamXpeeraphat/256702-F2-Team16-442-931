@@ -12,27 +12,24 @@ public class LevelOne extends MainLevel {
         motorcycleY = 700;
         setFocusable(true);
         initializeLevelOneUI();
-        startLevel();
+        startLevel(); // เริ่มเลเวลครั้งแรก
         regainFocus();
     }
 
     @Override
     public void startLevel() {
         System.out.println("Level 1 started!");
-        // ลบเหรียญเก่าทั้งหมดออกจาก UI
         Component[] components = getComponents();
         for (Component comp : components) {
             if (comp instanceof JLabel && comp != coinLabel && comp != timeLabel && comp != motorcycleLabel && comp != goalLabel) {
-                remove(comp); // ลบ JLabel ที่ไม่ใช่ UI หลัก (เช่น เหรียญเก่า)
+                remove(comp);
             }
         }
-        coins.clear(); // ล้างรายการ coins
+        coins.clear();
 
-        // สร้างเหรียญใหม่
         int[] coinXPositions = {200, 400, 600, 800, 1000, 1200};
         initializeCoins(coinXPositions, 650);
 
-        // ลบเส้นชัยเก่า (ถ้ามี) และสร้างใหม่
         if (goalLabel != null) {
             remove(goalLabel);
         }
@@ -50,6 +47,7 @@ public class LevelOne extends MainLevel {
 
         isGameActive = true;
         startTimer();
+        regainFocus();
         revalidate();
         repaint();
     }
@@ -88,13 +86,22 @@ public class LevelOne extends MainLevel {
         SwingUtilities.invokeLater(() -> {
             setFocusable(true);
             requestFocusInWindow();
+            mainGameWindow.getFrame().requestFocus();
             if (isFocusOwner()) {
                 System.out.println("LevelOne regained focus");
             } else {
                 System.out.println("LevelOne failed to regain focus, forcing focus...");
+                mainGameWindow.getFrame().toFront();
                 mainGameWindow.getFrame().requestFocus();
                 requestFocusInWindow();
             }
         });
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        // ไม่เรียก restartLevel() ที่นี่ เพื่อรักษาสถานะเดิม
+        regainFocus();
     }
 }

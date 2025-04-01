@@ -11,7 +11,8 @@ public class MainGameWindow extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private ShopGame shopGame;
-    private Inventory inventory; // ตัวแปรสำหรับ Inventory เดียว
+    private Inventory inventory;
+    private LevelOne levelOne; // เก็บ instance ของ LevelOne
 
     public MainGameWindow() {
         setTitle("Adventure Rider Game");
@@ -25,11 +26,11 @@ public class MainGameWindow extends JFrame {
         mainPanel = new JPanel(cardLayout);
 
         try {
-            inventory = new Inventory(this); // สร้าง Inventory ครั้งเดียว
+            inventory = new Inventory(this);
             HomePage homePage = new HomePage(this);
             LevelGame levelGame = new LevelGame(this);
             shopGame = new ShopGame(this, null);
-            LevelOne levelOne = new LevelOne(this);
+            levelOne = new LevelOne(this); // สร้าง LevelOne ครั้งเดียว
 
             mainPanel.add(homePage, "HomePage");
             mainPanel.add(levelGame, "LevelGame");
@@ -123,9 +124,11 @@ public class MainGameWindow extends JFrame {
         return inventory;
     }
 
+    public LevelOne getLevelOne() {
+        return levelOne; // เพิ่มเมธอดเพื่อเข้าถึง instance เดียวของ LevelOne
+    }
+
     public JFrame getFrame() {
         return this;
     }
-
-
 }

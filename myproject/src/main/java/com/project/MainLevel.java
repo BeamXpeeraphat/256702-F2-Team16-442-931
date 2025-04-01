@@ -27,7 +27,8 @@ public abstract class MainLevel extends JPanel {
     protected boolean dPressed = false;
     protected boolean isGameActive = false;
     protected ArrayList<JLabel> coins;
-    protected JLabel goalLabel; // เพิ่มตัวแปรสำหรับเส้นชัย
+    protected JLabel goalLabel;
+    protected boolean hasWon = false;
 
     public MainLevel(MainGameWindow mainGameWindow) {
         this.mainGameWindow = mainGameWindow;
@@ -79,20 +80,22 @@ public abstract class MainLevel extends JPanel {
 
     protected void initializeMotorcycle() {
         String selectedMotorcycle = inventory.getSelectedMotorcycle();
-        if (selectedMotorcycle != null) {
-            ImageIcon motorcycleIcon = new ImageIcon(getClass().getClassLoader().getResource("com/project/" + selectedMotorcycle));
-            if (motorcycleIcon.getImage() != null) {
-                Image scaledImage = motorcycleIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                motorcycleLabel = new JLabel(new ImageIcon(scaledImage));
-                motorcycleLabel.setBounds(motorcycleX, motorcycleY, 100, 100);
-                add(motorcycleLabel);
-                System.out.println("Initialized motorcycle: " + selectedMotorcycle);
-            } else {
-                System.err.println("Failed to load motorcycle image: " + selectedMotorcycle + " in MainLevel");
-            }
-        } else {
-            System.err.println("No selected motorcycle available in Inventory!");
+        if (selectedMotorcycle == null) {
+            System.err.println("No selected motorcycle available in Inventory! Using default motorcycle.");
+            selectedMotorcycle = "motorcycle1.png";
         }
+        ImageIcon motorcycleIcon = new ImageIcon(getClass().getClassLoader().getResource("com/project/" + selectedMotorcycle));
+        if (motorcycleIcon.getImage() == null) {
+            System.err.println("Failed to load motorcycle image: " + selectedMotorcycle + ". Check resource path.");
+            motorcycleLabel = new JLabel("Motorcycle");
+            motorcycleLabel.setBounds(motorcycleX, motorcycleY, 100, 100);
+        } else {
+            Image scaledImage = motorcycleIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            motorcycleLabel = new JLabel(new ImageIcon(scaledImage));
+            motorcycleLabel.setBounds(motorcycleX, motorcycleY, 100, 100);
+            System.out.println("Initialized motorcycle: " + selectedMotorcycle);
+        }
+        add(motorcycleLabel);
     }
 
     protected void setupControls() {
@@ -102,11 +105,15 @@ public abstract class MainLevel extends JPanel {
             @Override
             public void focusGained(FocusEvent e) {
                 System.out.println("MainLevel gained focus");
+                if (isGameActive && (gameTimer == null || !gameTimer.isRunning())) {
+                    startTimer();
+                }
             }
 
             @Override
             public void focusLost(FocusEvent e) {
                 System.out.println("MainLevel lost focus");
+                stopTimer();
             }
         });
 
@@ -153,15 +160,16 @@ public abstract class MainLevel extends JPanel {
             if (isFocusOwner()) {
                 System.out.println("Focus successfully regained by MainLevel");
             } else {
-                System.out.println("Failed to regain focus for MainLevel");
+                System.out.println("Failed to regain focus for MainLevel, forcing focus...");
                 mainGameWindow.getFrame().toFront();
+                mainGameWindow.getFrame().requestFocus();
                 requestFocusInWindow();
             }
         });
     }
 
     public void updateMotorcycle() {
-        if (!isGameActive) return; // หยุดการเคลื่อนที่ถ้าเกมไม่active
+        if (!isGameActive) return;
         if (aPressed && motorcycleX > 0) {
             motorcycleX -= motorcycleSpeed;
         }
@@ -185,7 +193,7 @@ public abstract class MainLevel extends JPanel {
         if (motorcycleLabel != null) {
             motorcycleLabel.setLocation(motorcycleX, motorcycleY);
             checkCoinCollision();
-            checkGoalCollision(); // ตรวจจับการชนเส้นชัย
+            checkGoalCollision();
         }
     }
 
@@ -201,24 +209,29 @@ public abstract class MainLevel extends JPanel {
     }
 
     protected void startTimer() {
-        if (!isGameActive) return;
-        if (gameTimer != null && gameTimer.isRunning()) {
-            gameTimer.stop();
+        if (!isGameActive) {
+            System.out.println("Cannot start timer: Game is not active");
+            return;
         }
+        stopTimer();
         gameTimer = new Timer(1000, e -> {
             gameTime++;
             int minutes = gameTime / 60;
             int seconds = gameTime % 60;
             timeLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
-            repaint();
+            timeLabel.revalidate();
+            timeLabel.repaint();
+            System.out.println("Timer tick: " + timeLabel.getText());
         });
         gameTimer.start();
         System.out.println("Timer started");
     }
 
     protected void stopTimer() {
-        if (gameTimer != null) gameTimer.stop();
-        System.out.println("Timer stopped");
+        if (gameTimer != null && gameTimer.isRunning()) {
+            gameTimer.stop();
+            System.out.println("Timer stopped");
+        }
     }
 
     protected void showSettings() {
@@ -229,6 +242,7 @@ public abstract class MainLevel extends JPanel {
     }
 
     protected void resumeGame() {
+        System.out.println("Resuming game...");
         isGameActive = true;
         startTimer();
         regainFocus();
@@ -250,6 +264,7 @@ public abstract class MainLevel extends JPanel {
         isGameActive = true;
         startTimer();
         startLevel();
+        regainFocus(); // เพิ่มการคืนโฟกัส
         repaint();
     }
 
@@ -261,6 +276,10 @@ public abstract class MainLevel extends JPanel {
         updateInventoryCoins();
         stopTimer();
         isGameActive = false;
+        if (hasWon) {
+            restartLevel();
+            hasWon = false;
+        }
         mainGameWindow.showPanel("LevelGame");
     }
 
@@ -274,22 +293,24 @@ public abstract class MainLevel extends JPanel {
             remove(motorcycleLabel);
         }
         String selectedMotorcycle = inventory.getSelectedMotorcycle();
-        if (selectedMotorcycle != null) {
-            ImageIcon motorcycleIcon = new ImageIcon(getClass().getClassLoader().getResource("com/project/" + selectedMotorcycle));
-            if (motorcycleIcon.getImage() != null) {
-                Image scaledImage = motorcycleIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                motorcycleLabel = new JLabel(new ImageIcon(scaledImage));
-                motorcycleLabel.setBounds(motorcycleX, motorcycleY, 100, 100);
-                add(motorcycleLabel);
-                revalidate();
-                repaint();
-                System.out.println("Motorcycle updated to: " + selectedMotorcycle);
-            } else {
-                System.err.println("Failed to load motorcycle image: " + selectedMotorcycle);
-            }
-        } else {
-            System.err.println("No selected motorcycle to update!");
+        if (selectedMotorcycle == null) {
+            System.err.println("No selected motorcycle available in Inventory! Using default motorcycle.");
+            selectedMotorcycle = "motorcycle1.png";
         }
+        ImageIcon motorcycleIcon = new ImageIcon(getClass().getClassLoader().getResource("com/project/" + selectedMotorcycle));
+        if (motorcycleIcon.getImage() == null) {
+            System.err.println("Failed to load motorcycle image: " + selectedMotorcycle);
+            motorcycleLabel = new JLabel("Motorcycle");
+            motorcycleLabel.setBounds(motorcycleX, motorcycleY, 100, 100);
+        } else {
+            Image scaledImage = motorcycleIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            motorcycleLabel = new JLabel(new ImageIcon(scaledImage));
+            motorcycleLabel.setBounds(motorcycleX, motorcycleY, 100, 100);
+            System.out.println("Motorcycle updated to: " + selectedMotorcycle);
+        }
+        add(motorcycleLabel);
+        revalidate();
+        repaint();
     }
 
     protected void resetLevelStats() {
@@ -358,21 +379,19 @@ public abstract class MainLevel extends JPanel {
         }
     }
 
-    // เพิ่มเมธอดสำหรับตรวจจับการชนเส้นชัย
     protected void checkGoalCollision() {
         if (goalLabel == null || motorcycleLabel == null) return;
         Rectangle motorcycleBounds = new Rectangle(motorcycleX, motorcycleY, 100, 100);
         Rectangle goalBounds = goalLabel.getBounds();
-        // ชนะเมื่อมอเตอร์ไซค์ถึงครึ่งหนึ่งของเส้นชัย
         int goalMidPoint = goalBounds.x + (goalBounds.width / 2);
         if (motorcycleBounds.intersects(goalBounds) && motorcycleX + 100 >= goalMidPoint) {
-            isGameActive = false; // หยุดเกม
-            stopTimer(); // หยุดเวลา
-            showWinDialog(); // แสดงหน้าต่างชนะ
+            isGameActive = false;
+            stopTimer();
+            hasWon = true;
+            showWinDialog();
         }
     }
 
-    // เพิ่มเมธอดแสดงหน้าต่างชนะ
     protected void showWinDialog() {
         JDialog winDialog = new JDialog(mainGameWindow.getFrame(), "You Win!", true);
         winDialog.setLayout(new GridLayout(4, 1, 10, 10));

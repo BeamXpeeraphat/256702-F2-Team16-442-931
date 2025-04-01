@@ -68,18 +68,19 @@ public class HomePage extends JPanel {
         resetButton.setFont(new Font("Arial", Font.BOLD, 14));
         resetButton.setBackground(Color.RED);
         resetButton.setForeground(Color.WHITE);
-        resetButton.setPreferredSize(new Dimension(150, 50));
+        resetButton.setPreferredSize(new Dimension(100, 40));
         resetButton.addActionListener(e -> resetGame());
 
         JPanel resetPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         resetPanel.setOpaque(false);
+        resetPanel.setPreferredSize(new Dimension(150, 50));
         resetPanel.add(resetButton);
 
         JPanel bottomContainer = new JPanel(new BorderLayout());
         bottomContainer.setOpaque(false);
         JPanel leftWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
         leftWrapper.setOpaque(false);
-        leftWrapper.add(bottomPanel);
+        leftWrapper.add(bottomPanel);  // สมมติว่า customPanel ถูกกำหนดไว้ที่อื่น
         bottomContainer.add(leftWrapper, BorderLayout.WEST);
         bottomContainer.add(resetPanel, BorderLayout.EAST);
         bottomContainer.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
@@ -94,13 +95,13 @@ public class HomePage extends JPanel {
         addHoverEffect(resetButton, Color.RED);
 
         playButton.addActionListener(e -> mainGameWindow.showPanel("LevelGame"));
-        shopButton.addActionListener(e -> mainGameWindow.showPanel("ShopGame")); // กลับไปใช้ showPanel
+        shopButton.addActionListener(e -> mainGameWindow.showPanel("ShopGame"));
         howToPlayButton.addActionListener(e -> CustomMessageDialog.showMessageDialog(this,
             "<html><center><b><font size='6'>How to play</font></b></center><br>" +
             "<font size='4'>" +
             "- Press A to move left<br>" +
             "- Press D to move right<br>" +
-            "- Press W or Spacebar to jump<br>" +
+            "- Press W to jump<br>" +
             "- Press H to honk the horn<br>" +
             "- Press P or ESC to pause the game and open various menus<br>" +
             "- Press M to enter the shop screen or change vehicles" +
@@ -166,6 +167,17 @@ public class HomePage extends JPanel {
                 Inventory inventory = shopGame.getInventory();
                 inventory.resetToDefault();
                 inventory.saveToFile();
+                
+                JPanel mainPanel = (JPanel) mainGameWindow.getFrame().getContentPane().getComponent(0);
+                for (Component comp : mainPanel.getComponents()) {
+                    if (comp instanceof LevelOne) {
+                        LevelOne levelOne = (LevelOne) comp;
+                        levelOne.restartLevel();
+                        System.out.println("LevelOne has been reset from HomePage");
+                        break;
+                    }
+                }
+                
                 CustomMessageDialog.showMessageDialog(this, "Game has been reset to default!", "Reset Complete", JOptionPane.INFORMATION_MESSAGE);
             }
         }

@@ -13,19 +13,19 @@ public class LevelGame extends JPanel {
         setLayout(new BorderLayout());
 
         ImageIcon backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("com/project/backgroundofgame.jpg"));
-JLabel backgroundLabel = new JLabel(backgroundImage) {
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (backgroundImage.getImage() != null) {
-            g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
-        } else {
-            System.err.println("Error: backgroundofgame.jpg not found!");
-            g.setColor(Color.GRAY);
-            g.fillRect(0, 0, getWidth(), getHeight());
-        }
-    }
-};
+        JLabel backgroundLabel = new JLabel(backgroundImage) {
+            @Override
+            public void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage.getImage() != null) {
+                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                } else {
+                    System.err.println("Error: backgroundofgame.jpg not found!");
+                    g.setColor(Color.GRAY);
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            }
+        };
         backgroundLabel.setLayout(new BorderLayout());
         add(backgroundLabel, BorderLayout.CENTER);
 
@@ -77,7 +77,23 @@ JLabel backgroundLabel = new JLabel(backgroundImage) {
         addHoverEffect(level0Button, new Color(50, 205, 50));
         addHoverEffect(backButton, new Color(255, 69, 0));
 
-        level1Button.addActionListener(e -> mainGameWindow.showPanel("LevelOne"));
+        // ปรับปรุง ActionListener สำหรับ Level 1
+        level1Button.addActionListener(e -> {
+            LevelOne levelOne = mainGameWindow.getLevelOne();
+            int gameTime = levelOne.getGameTime();
+            int levelCoins = levelOne.getLevelCoins();
+            System.out.println("Checking LevelOne progress before switch - Time: " + gameTime + ", Coins: " + levelCoins);
+            mainGameWindow.showPanel("LevelOne");
+            if (gameTime > 0 || levelCoins > 0) {
+                System.out.println("LevelOne has progress (Time: " + gameTime + ", Coins: " + levelCoins + "), showing game started message");
+                SwingUtilities.invokeLater(() -> {
+                    Setting.showGameStartedMessage(levelOne); // เรียกเมธอดใหม่
+                });
+            } else {
+                System.out.println("LevelOne has no progress, starting fresh");
+            }
+        });
+
         level2Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Level 2 is coming soon!", "Coming Soon", JOptionPane.INFORMATION_MESSAGE));
         level0Button.addActionListener(e -> JOptionPane.showMessageDialog(this, "Coming Soon!", "Coming Soon!", JOptionPane.INFORMATION_MESSAGE));
         backButton.addActionListener(e -> mainGameWindow.showPanel("HomePage"));

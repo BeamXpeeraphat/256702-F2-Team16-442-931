@@ -20,7 +20,8 @@ public class Setting extends JDialog {
 
         JButton resumeButton = new JButton("Resume");
         resumeButton.addActionListener(e -> {
-            dispose(); // ปิด dialog และกลับไปที่เกม
+            mainLevel.resumeGame();
+            dispose();
         });
         add(resumeButton);
 
@@ -38,18 +39,16 @@ public class Setting extends JDialog {
         });
         add(returnButton);
 
-        // จัดการเมื่อปิด Dialog ไม่ว่าจะด้วยปุ่มกากบาทหรือ Resume
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                mainLevel.resumeGame(); // เริ่มเกมต่อเมื่อปิดด้วยกากบาท
+                mainLevel.resumeGame();
                 System.out.println("Setting dialog closed via X, resuming game");
             }
 
             @Override
             public void windowClosed(WindowEvent e) {
-                mainLevel.resumeGame(); // เริ่มเกมต่อเมื่อปิดด้วยวิธีใดก็ตาม
-                System.out.println("Setting dialog closed, resuming game");
+                System.out.println("Setting dialog closed");
             }
         });
     }
@@ -69,5 +68,42 @@ public class Setting extends JDialog {
             }
         });
         shopDialog.setVisible(true);
+    }
+
+    // เมธอดใหม่สำหรับแสดง Message Dialog
+    public static void showGameStartedMessage(MainLevel mainLevel) {
+        JDialog messageDialog = new JDialog(mainLevel.mainGameWindow.getFrame(), "Game Status", true);
+        messageDialog.setLayout(new BorderLayout(10, 10));
+        messageDialog.setSize(300, 150);
+        messageDialog.setLocationRelativeTo(mainLevel.mainGameWindow.getFrame());
+
+        JLabel messageLabel = new JLabel("Resume the game", SwingConstants.CENTER);
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        messageDialog.add(messageLabel, BorderLayout.CENTER);
+
+        JButton okButton = new JButton("OK");
+        okButton.addActionListener(e -> {
+            mainLevel.resumeGame();
+            messageDialog.dispose();
+            System.out.println("Game resumed via OK button");
+        });
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(okButton);
+        messageDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        messageDialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                mainLevel.resumeGame();
+                System.out.println("Message dialog closed via X, resuming game");
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                System.out.println("Message dialog closed");
+            }
+        });
+
+        messageDialog.setVisible(true);
     }
 }
