@@ -63,11 +63,11 @@ public class ContactPanel extends JPanel {
         addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentResized(java.awt.event.ComponentEvent e) {
                 rightPanel.setBounds(275, 60, getWidth() - 325, getHeight() - 120);
+                revalidate();
                 repaint();
             }
         });
 
-        revalidate();
-        repaint();
+
     }
 }

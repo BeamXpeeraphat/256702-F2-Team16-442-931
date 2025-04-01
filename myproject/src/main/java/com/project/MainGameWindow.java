@@ -127,10 +127,5 @@ public class MainGameWindow extends JFrame {
         return this;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            MainGameWindow window = new MainGameWindow();
-            window.setVisible(true);
-        });
-    }
+
 }

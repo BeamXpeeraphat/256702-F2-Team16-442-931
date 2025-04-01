@@ -16,27 +16,20 @@ public class Inventory extends JPanel {
     private static final int MOTORCYCLE_WIDTH = 150;
     private static final int START_X = 20;
     private static final int START_Y = 150;
-    private static final int X_GAP = 250;
-    private static final int Y_GAP = 10;
+    private static final int X_GAP = 400; // ระยะห่างของมอไซค์ในแนวแกน X
+    private static final int Y_GAP = 30;  // ระยะห่างของมอไซค์ในแนวแกน Y
     private String selectedMotorcycle;
     private JLabel coinLabel;
-    private ArrayList<JLabel> motorcycleLabels;
     private MainLevel mainLevel;
 
     public Inventory(MainGameWindow mainGameWindow) {
+        this.mainLevel = null; // เพิ่มการกำหนดค่าเริ่มต้นให้ mainLevel
         setLayout(null);
         setOpaque(false);
 
         coins = 1000;
         ownedMotorcycles = new ArrayList<>();
         ownedMotorcycles.add("motorcycle1.png");
-        motorcycleLabels = new ArrayList<>();
-
-        rightPanel = new JPanel();
-        rightPanel.setBounds(275, 60, 700, 600);
-        rightPanel.setOpaque(true);
-        rightPanel.setBackground(Color.WHITE);
-        rightPanel.setLayout(null);
 
         loadFromFile();
 
@@ -46,19 +39,12 @@ public class Inventory extends JPanel {
 
         coinIcon = loadCoinImage("coin.png");
 
-        JLabel titleLabel = new JLabel("<html><b><span style=\"font-size: 24px;\">Inventory Section</span></b><br>"
-                + "Your coins and owned items are here.</html>");
-        titleLabel.setBounds(10, 10, 480, 50);
-        rightPanel.add(titleLabel);
-
+        initializeRightPanel(); // ตั้งค่าเริ่มต้นของ rightPanel
         add(rightPanel);
-        initializeInventoryDisplay();
 
         addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentResized(java.awt.event.ComponentEvent e) {
-                int newWidth = Math.max(getWidth() - 325, 700);
-                int newHeight = Math.max(getHeight() - 120, 600);
-                rightPanel.setBounds(275, 60, newWidth, newHeight);
+                updatePanelSize(); // อัปเดตขนาดเมื่อมีการปรับขนาด
                 repaint();
             }
         });
@@ -67,30 +53,25 @@ public class Inventory extends JPanel {
         repaint();
     }
 
-    public void addMotorcycle(String motorcycleName) {
-        if (!ownedMotorcycles.contains(motorcycleName)) {
-            ownedMotorcycles.add(motorcycleName);
-            updateInventoryDisplay();
-            saveToFile();
-            System.out.println("Added motorcycle: " + motorcycleName); // Log เพื่อดีบั๊ก
+    private void initializeRightPanel() {
+        // ถ้ามี rightPanel เดิมอยู่ ให้ลบออกก่อน
+        if (rightPanel != null) {
+            remove(rightPanel);
         }
-    }
 
-    public boolean spendCoins(int amount) {
-        if (coins >= amount) {
-            coins -= amount;
-            updateInventoryDisplay();
-            saveToFile();
-            return true;
-        }
-        return false;
-    }
+        rightPanel = new JPanel();
+        int panelWidth = Math.max(getWidth() - 325, 700); // คงขนาดขั้นต่ำ 700
+        int panelHeight = Math.max(getHeight() - 120, 600); // คงขนาดขั้นต่ำ 600
+        rightPanel.setBounds(275, 60, panelWidth, panelHeight);
+        rightPanel.setOpaque(true);
+        rightPanel.setBackground(new Color(255, 255, 255, 150)); // โปร่งใส (alpha = 150)
+        rightPanel.setLayout(null);
 
-    public boolean isMotorcycleOwned(String motorcycleName) {
-        return ownedMotorcycles.contains(motorcycleName);
-    }
+        JLabel titleLabel = new JLabel("<html><b><span style=\"font-size: 24px;\">Inventory Section</span></b><br>"
+                + "Your coins and owned items are here.</html>");
+        titleLabel.setBounds(10, 10, 480, 50);
+        rightPanel.add(titleLabel);
 
-    private void initializeInventoryDisplay() {
         coinLabel = new JLabel("Coins: " + coins, coinIcon, JLabel.LEFT);
         coinLabel.setFont(new Font("Arial", Font.BOLD, 16));
         coinLabel.setBounds(10, 70, 200, 30);
@@ -105,6 +86,7 @@ public class Inventory extends JPanel {
         int y = START_Y;
         int maxHeightRow1 = 0;
 
+        // คำนวณความสูงสูงสุดของแถวแรก
         for (String motorcycle : ownedMotorcycles) {
             ImageIcon icon = loadImage(motorcycle);
             if (icon != null && index < 2) {
@@ -115,7 +97,6 @@ public class Inventory extends JPanel {
         }
 
         index = 0;
-        motorcycleLabels.clear();
         for (String motorcycle : ownedMotorcycles) {
             String displayImage = motorcycle.equals(selectedMotorcycle) ? motorcycle.replace(".png", "select.png") : motorcycle;
             ImageIcon icon = loadImage(displayImage);
@@ -123,7 +104,8 @@ public class Inventory extends JPanel {
                 icon = loadImage(motorcycle);
             }
             if (icon != null) {
-                JLabel itemLabel = new JLabel(motorcycle, icon, JLabel.LEFT);
+                String displayName = motorcycle.replace(".png", "");
+                JLabel itemLabel = new JLabel(displayName, icon, JLabel.LEFT);
                 int row = index / 2;
                 int col = index % 2;
                 int x = START_X + col * X_GAP;
@@ -139,7 +121,7 @@ public class Inventory extends JPanel {
                     @Override
                     public void mouseClicked(MouseEvent e) {
                         selectedMotorcycle = motorcycleName;
-                        updateInventoryDisplay();
+                        refreshPanel(); // รีเฟรชทั้ง panel เมื่อเลือกมอเตอร์ไซค์
                         saveToFile();
                         if (mainLevel != null) {
                             mainLevel.notifyMotorcycleChanged();
@@ -150,71 +132,50 @@ public class Inventory extends JPanel {
                     }
                 });
 
-                motorcycleLabels.add(itemLabel);
                 rightPanel.add(itemLabel);
                 index++;
                 if (index >= 4) break;
             }
         }
-
-        rightPanel.revalidate();
-        rightPanel.repaint();
     }
 
-    public void updateInventoryDisplay() {
-        if (coinLabel != null) {
-            coinLabel.setText("Coins: " + coins);
+    public void addMotorcycle(String motorcycleName) {
+        if (!ownedMotorcycles.contains(motorcycleName)) {
+            ownedMotorcycles.add(motorcycleName);
+            refreshPanel(); // รีเฟรชทั้ง panel เมื่อเพิ่มมอเตอร์ไซค์
+            saveToFile();
+            System.out.println("Added motorcycle: " + motorcycleName);
         }
+    }
 
-        int index = 0;
-        for (String motorcycle : ownedMotorcycles) {
-            String displayImage = motorcycle.equals(selectedMotorcycle) ? motorcycle.replace(".png", "select.png") : motorcycle;
-            ImageIcon icon = loadImage(displayImage);
-            if (icon == null) {
-                icon = loadImage(motorcycle);
-            }
-            if (icon != null) {
-                if (index < motorcycleLabels.size()) {
-                    motorcycleLabels.get(index).setIcon(icon);
-                    motorcycleLabels.get(index).setText(motorcycle);
-                } else {
-                    JLabel itemLabel = new JLabel(motorcycle, icon, JLabel.LEFT);
-                    int row = index / 2;
-                    int col = index % 2;
-                    int x = START_X + col * X_GAP;
-                    int y = START_Y;
-                    if (row == 1) {
-                        y += motorcycleLabels.get(0).getHeight() + Y_GAP;
-                    }
-                    itemLabel.setBounds(x, y, MOTORCYCLE_WIDTH + 200, icon.getIconHeight());
-
-                    final String motorcycleName = motorcycle;
-                    itemLabel.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            selectedMotorcycle = motorcycleName;
-                            updateInventoryDisplay();
-                            saveToFile();
-                            if (mainLevel != null) {
-                                mainLevel.notifyMotorcycleChanged();
-                                System.out.println("Notified MainLevel: Selected motorcycle changed to " + motorcycleName);
-                            } else {
-                                System.err.println("MainLevel is null in setSelectedMotorcycle!");
-                            }
-                        }
-                    });
-
-                    motorcycleLabels.add(itemLabel);
-                    rightPanel.add(itemLabel);
-                }
-                index++;
-                if (index >= 4) break;
-            }
+    public boolean spendCoins(int amount) {
+        if (coins >= amount) {
+            coins -= amount;
+            refreshPanel(); // รีเฟรชทั้ง panel เมื่อใช้เหรียญ
+            saveToFile();
+            return true;
         }
+        return false;
+    }
 
-        rightPanel.revalidate();
-        rightPanel.repaint();
-        System.out.println("Inventory updated with " + ownedMotorcycles.size() + " motorcycles"); // Log เพื่อดีบั๊ก
+    public boolean isMotorcycleOwned(String motorcycleName) {
+        return ownedMotorcycles.contains(motorcycleName);
+    }
+
+    private void refreshPanel() {
+        initializeRightPanel(); // สร้าง rightPanel ใหม่
+        add(rightPanel);
+        updatePanelSize(); // อัปเดตขนาดให้สอดคล้องกับขนาดปัจจุบัน
+        revalidate();
+        repaint();
+    }
+
+    private void updatePanelSize() {
+        if (rightPanel != null) {
+            int panelWidth = Math.max(getWidth() - 325, 700);
+            int panelHeight = Math.max(getHeight() - 120, 600);
+            rightPanel.setBounds(275, 60, panelWidth, panelHeight);
+        }
     }
 
     private ImageIcon loadImage(String imageName) {
@@ -306,13 +267,7 @@ public class Inventory extends JPanel {
         ownedMotorcycles.clear();
         ownedMotorcycles.add("motorcycle1.png");
         selectedMotorcycle = "motorcycle1.png";
-        motorcycleLabels.clear();
-        rightPanel.removeAll();
-        JLabel titleLabel = new JLabel("<html><b><span style=\"font-size: 24px;\">Inventory Section</span></b><br>"
-                + "Your coins and owned items are here.</html>");
-        titleLabel.setBounds(10, 10, 480, 50);
-        rightPanel.add(titleLabel);
-        initializeInventoryDisplay();
+        refreshPanel(); // รีเฟรชทั้ง panel
         saveToFile();
     }
 
@@ -322,7 +277,7 @@ public class Inventory extends JPanel {
 
     public void addCoins(int amount) {
         coins += amount;
-        updateInventoryDisplay();
+        refreshPanel(); // รีเฟรชทั้ง panel
         saveToFile();
     }
 
@@ -338,7 +293,7 @@ public class Inventory extends JPanel {
     public void setSelectedMotorcycle(String motorcycleName) {
         if (ownedMotorcycles.contains(motorcycleName)) {
             selectedMotorcycle = motorcycleName;
-            updateInventoryDisplay();
+            refreshPanel(); // รีเฟรชทั้ง panel
             saveToFile();
             if (mainLevel != null) {
                 mainLevel.notifyMotorcycleChanged();

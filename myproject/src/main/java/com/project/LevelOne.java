@@ -29,7 +29,7 @@ public class LevelOne extends MainLevel {
         coins.clear(); // ล้างรายการ coins
 
         // สร้างเหรียญใหม่
-        int[] coinXPositions = {200, 400, 600};
+        int[] coinXPositions = {200, 400, 600, 800, 1000, 1200};
         initializeCoins(coinXPositions, 650);
 
         // ลบเส้นชัยเก่า (ถ้ามี) และสร้างใหม่
