@@ -101,10 +101,8 @@ public class HomePage extends JPanel {
             "<font size='4'>" +
             "- Press A to move left<br>" +
             "- Press D to move right<br>" +
-            "- Press W to jump<br>" +
-            "- Press H to honk the horn<br>" +
+            "- Press W or SpaceBar to jump<br>" +
             "- Press P or ESC to pause the game and open various menus<br>" +
-            "- Press M to enter the shop screen or change vehicles" +
             "</font></html>", "How to Play", JOptionPane.INFORMATION_MESSAGE));
         infoButton.addActionListener(e -> CustomMessageDialog.showMessageDialog(this,
             "<html><b><font size='4'>This game is created and developed by <br>" +

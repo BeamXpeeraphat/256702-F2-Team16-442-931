@@ -76,12 +76,14 @@ public class Setting extends JDialog {
         messageDialog.setLayout(new BorderLayout(10, 10));
         messageDialog.setSize(300, 150);
         messageDialog.setLocationRelativeTo(mainLevel.mainGameWindow.getFrame());
-
+        messageDialog.setCursor(CursorManager.getNormalCursor()); // ตั้งค่า cursor สำหรับ dialog
+    
         JLabel messageLabel = new JLabel("Resume the game", SwingConstants.CENTER);
         messageLabel.setFont(new Font("Arial", Font.BOLD, 16));
         messageDialog.add(messageLabel, BorderLayout.CENTER);
-
+    
         JButton okButton = new JButton("OK");
+        okButton.setCursor(CursorManager.getClickCursor()); // ตั้งค่า cursor สำหรับปุ่ม
         okButton.addActionListener(e -> {
             mainLevel.resumeGame();
             messageDialog.dispose();
@@ -90,20 +92,20 @@ public class Setting extends JDialog {
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(okButton);
         messageDialog.add(buttonPanel, BorderLayout.SOUTH);
-
+    
         messageDialog.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 mainLevel.resumeGame();
                 System.out.println("Message dialog closed via X, resuming game");
             }
-
+    
             @Override
             public void windowClosed(WindowEvent e) {
                 System.out.println("Message dialog closed");
             }
         });
-
+    
         messageDialog.setVisible(true);
     }
 }

@@ -17,7 +17,7 @@ public class Inventory extends JPanel {
     private static final int START_X = 20;
     private static final int START_Y = 150;
     private static final int X_GAP = 400; // ระยะห่างของมอไซค์ในแนวแกน X
-    private static final int Y_GAP = 30;  // ระยะห่างของมอไซค์ในแนวแกน Y
+    private static final int Y_GAP = 150;  // ระยะห่างของมอไซค์ในแนวแกน Y
     private String selectedMotorcycle;
     private JLabel coinLabel;
     private MainLevel mainLevel;
@@ -88,16 +88,6 @@ public class Inventory extends JPanel {
 
         // คำนวณความสูงสูงสุดของแถวแรก
         for (String motorcycle : ownedMotorcycles) {
-            ImageIcon icon = loadImage(motorcycle);
-            if (icon != null && index < 2) {
-                maxHeightRow1 = Math.max(maxHeightRow1, icon.getIconHeight());
-            }
-            index++;
-            if (index >= 4) break;
-        }
-
-        index = 0;
-        for (String motorcycle : ownedMotorcycles) {
             String displayImage = motorcycle.equals(selectedMotorcycle) ? motorcycle.replace(".png", "select.png") : motorcycle;
             ImageIcon icon = loadImage(displayImage);
             if (icon == null) {
@@ -115,13 +105,26 @@ public class Inventory extends JPanel {
                 } else {
                     itemLabel.setBounds(x, y + maxHeightRow1 + Y_GAP, MOTORCYCLE_WIDTH + 200, height);
                 }
-
+        
+                // ตั้งค่า cursor
+                itemLabel.setCursor(CursorManager.getClickCursor());
+        
                 final String motorcycleName = motorcycle;
                 itemLabel.addMouseListener(new MouseAdapter() {
                     @Override
+                    public void mouseEntered(MouseEvent e) {
+                        itemLabel.setCursor(CursorManager.getClickCursor());
+                    }
+        
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        itemLabel.setCursor(CursorManager.getNormalCursor());
+                    }
+        
+                    @Override
                     public void mouseClicked(MouseEvent e) {
                         selectedMotorcycle = motorcycleName;
-                        refreshPanel(); // รีเฟรชทั้ง panel เมื่อเลือกมอเตอร์ไซค์
+                        refreshPanel();
                         saveToFile();
                         if (mainLevel != null) {
                             mainLevel.notifyMotorcycleChanged();
@@ -131,7 +134,7 @@ public class Inventory extends JPanel {
                         }
                     }
                 });
-
+        
                 rightPanel.add(itemLabel);
                 index++;
                 if (index >= 4) break;

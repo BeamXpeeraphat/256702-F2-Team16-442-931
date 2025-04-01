@@ -83,7 +83,7 @@ public class MotorcyclePanel extends JPanel {
         if (icon != null) {
             JLabel imageLabel = createImageLabel(icon);
             imageLabel.setBounds(POSITIONS[index][0], POSITIONS[index][1], icon.getIconWidth(), icon.getIconHeight());
-
+    
             String motorcycleName = imageName.replace(".png", "");
             String displayText = "<html><center>" + motorcycleName + "<br>" + PRICES[index] + " Coins</center></html>";
             JLabel namePriceLabel = new JLabel(displayText);
@@ -92,20 +92,22 @@ public class MotorcyclePanel extends JPanel {
             int labelX = POSITIONS[index][0];
             int labelY = POSITIONS[index][1] + icon.getIconHeight() + 5;
             namePriceLabel.setBounds(labelX, labelY, icon.getIconWidth(), 50);
-
+    
+            // ตั้งค่า cursor สำหรับ imageLabel
+            imageLabel.setCursor(CursorManager.getClickCursor());
+    
+            // เพิ่ม MouseListener สำหรับ imageLabel
             imageLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    System.out.println("Mouse entered " + imageName);
                     imageLabel.setCursor(CursorManager.getClickCursor());
                 }
-
+    
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    System.out.println("Mouse exited " + imageName);
                     imageLabel.setCursor(CursorManager.getNormalCursor());
                 }
-
+    
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     System.out.println("Clicked on " + imageName);
@@ -128,7 +130,7 @@ public class MotorcyclePanel extends JPanel {
                             if (inventory.spendCoins(PRICES[index])) {
                                 inventory.addMotorcycle(motorcycleName);
                                 int remainingCoins = inventory.getCoins();
-                                refreshPanel(); // รีเฟรช MotorcyclePanel
+                                refreshPanel();
                                 CustomMessageDialog.showMessageDialog(MotorcyclePanel.this, 
                                     "Buy " + motorcycleName.replace(".png", "") + " complete!\nBalance: " + remainingCoins + " Coin",
                                     "Purchase Confirmation", 
@@ -142,7 +144,7 @@ public class MotorcyclePanel extends JPanel {
                     }
                 }
             });
-
+    
             rightPanel.add(imageLabel);
             rightPanel.add(namePriceLabel);
         }

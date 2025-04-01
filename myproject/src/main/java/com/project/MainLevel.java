@@ -109,14 +109,14 @@ public abstract class MainLevel extends JPanel {
                     startTimer();
                 }
             }
-
+    
             @Override
             public void focusLost(FocusEvent e) {
                 System.out.println("MainLevel lost focus");
                 stopTimer();
             }
         });
-
+    
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -126,25 +126,31 @@ public abstract class MainLevel extends JPanel {
                     return;
                 }
                 int key = e.getKeyCode();
-                if (key == KeyEvent.VK_W && !isJumping) {
+                // เพิ่ม Space Bar ให้ทำงานเหมือน W
+                if ((key == KeyEvent.VK_W || key == KeyEvent.VK_SPACE) && !isJumping) {
                     wPressed = true;
                 }
                 if (key == KeyEvent.VK_A) aPressed = true;
                 if (key == KeyEvent.VK_D) dPressed = true;
+                // เพิ่ม ESC และ P เพื่อเปิด Settings
+                if (key == KeyEvent.VK_ESCAPE || key == KeyEvent.VK_P) {
+                    showSettings();
+                }
                 updateMotorcycle();
             }
-
+    
             @Override
             public void keyReleased(KeyEvent e) {
                 if (!isFocusOwner()) return;
                 int key = e.getKeyCode();
-                if (key == KeyEvent.VK_W) wPressed = false;
+                // เพิ่ม Space Bar ให้ทำงานเหมือน W
+                if (key == KeyEvent.VK_W || key == KeyEvent.VK_SPACE) wPressed = false;
                 if (key == KeyEvent.VK_A) aPressed = false;
                 if (key == KeyEvent.VK_D) dPressed = false;
                 updateMotorcycle();
             }
         });
-
+    
         Timer movementTimer = new Timer(20, e -> {
             updateMotorcycle();
             repaint();
